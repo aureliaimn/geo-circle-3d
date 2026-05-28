@@ -498,7 +498,7 @@ export default function GeoCircleDashboard() {
       {/* MATERI DASAR LINGKARAN */}
       <section ref={materiRef} style={{ ...getRevealStyle(4), position: 'relative', padding: '100px 50px 120px 50px', backgroundColor: '#03060d' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
-          <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Materi Dasar Matematika</h2>
+          <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Materi Dasar</h2>
           <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Klik judul materi di bawah ini untuk membaca penjelasan lengkapnya.</p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
