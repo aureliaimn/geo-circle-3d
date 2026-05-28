@@ -414,7 +414,7 @@ export default function GeoCircleDashboard() {
               onMouseDown={handleMouseDown}
               style={{ ...styleInteraktifButton, padding: '16px 44px', fontSize: '10pt', fontWeight: '700', color: '#ffffff', backgroundColor: '#a855f7', border: 'none', borderRadius: '10px', boxShadow: '0 10px 25px -5px rgba(168, 85, 247, 0.3)' }}
             >
-              ▶ Mulai Simulasi
+              ▶ Mulai
             </button>
           </div>
         </div>
