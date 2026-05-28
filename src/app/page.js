@@ -18,7 +18,6 @@ function RodaDekorasiOtomatis() {
   });
 
   const pakuDekor = [];
-  // Radius dikecilkan ke 1.6 agar pas di frame landing page & tidak kepotong
   const radius = 1.6; 
   
   for (let i = 0; i < 360; i += 15) {
@@ -166,7 +165,6 @@ export default function GeoCircleDashboard() {
     cursor: 'pointer'
   };
 
-  // Helper animasi interaktif timbul untuk tombol-tombol
   const handleMouseEnter = (e, shadowColor = 'rgba(168, 85, 247, 0.4)', scale = '1.04') => {
     e.currentTarget.style.transform = `translateY(-4px) scale(${scale})`;
     e.currentTarget.style.boxShadow = `0 12px 30px -4px ${shadowColor}`;
@@ -198,7 +196,6 @@ export default function GeoCircleDashboard() {
   const panduanRef = useRef(null);
   const materiRef = useRef(null);
 
-  // --- KODE TRANSISE REVEAL BERGANTIAN (SMOOTH SLIDE-UP) ---
   const [revealedSections, setRevealedSections] = useState({});
   
   useEffect(() => {
@@ -214,7 +211,7 @@ export default function GeoCircleDashboard() {
           }
         });
       },
-      { threshold: 0.08 }
+      { threshold: 0.05 }
     );
 
     sections.forEach(ref => {
@@ -230,10 +227,9 @@ export default function GeoCircleDashboard() {
 
   const getRevealStyle = (index) => ({
     opacity: revealedSections[index] ? 1 : 0,
-    transform: revealedSections[index] ? 'translateY(0)' : 'translateY(40px)',
+    transform: revealedSections[index] ? 'translateY(0)' : 'translateY(30px)',
     transition: 'all 0.85s cubic-bezier(0.215, 0.610, 0.355, 1.000)',
   });
-  // --------------------------------------------------------
 
   const scrollToSection = (elementRef) => {
     window.scrollTo({
@@ -301,14 +297,29 @@ export default function GeoCircleDashboard() {
 
   const MathBlurBackground = () => (
     <div style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 1 }}>
-      <div style={{ position: 'absolute', top: '15%', left: '5%', fontSize: '64pt', fontWeight: '800', color: 'rgba(168, 85, 247, 0.03)', filter: 'blur(4px)', transform: 'rotate(-12deg)', fontFamily: 'monospace' }}>∠BOC = 2∠BAC</div>
-      <div style={{ position: 'absolute', bottom: '25%', right: '8%', fontSize: '80pt', fontWeight: '800', color: 'rgba(6, 182, 212, 0.03)', filter: 'blur(5px)', transform: 'rotate(18deg)', fontFamily: 'monospace' }}>r = 2.8px</div>
+      <div style={{ position: 'absolute', top: '15%', left: '5%', fontSize: '40pt', fontWeight: '800', color: 'rgba(168, 85, 247, 0.03)', filter: 'blur(4px)', transform: 'rotate(-12deg)', fontFamily: 'monospace' }}>∠BOC = 2∠BAC</div>
+      <div style={{ position: 'absolute', bottom: '25%', right: '8%', fontSize: '50pt', fontWeight: '800', color: 'rgba(6, 182, 212, 0.03)', filter: 'blur(5px)', transform: 'rotate(18deg)', fontFamily: 'monospace' }}>r = 2.8px</div>
     </div>
   );
 
   return (
     <div style={{ backgroundColor: '#050811', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#f8fafc', letterSpacing: '-0.2px', overflowX: 'hidden' }}>
       
+      {/* INJEKSI STYLE RESPONSIVE (MEDIA QUERIES) UNTUK HP AGAR ANTI RUSAK */}
+      <style>{`
+        @media (max-width: 768px) {
+          nav { padding: 0 20px !important; height: 60px !important; }
+          nav div:last-child { display: none !important; } /* Sembunyikan menu teks navbar di HP */
+          section { padding: 60px 20px !important; }
+          .hero-section { flex-direction: column-reverse !important; text-align: center !important; padding-top: 90px !important; }
+          .hero-text h1 { fontSize: '28pt' !important; }
+          .hero-text p { maxWidth: '100%' !important; }
+          .grid-responsive { grid-template-columns: 1fr !important; }
+          .simulator-container { flexDirection: column !important; }
+          .simulator-panel { width: 100% !important; minWidth: 100% !important; height: auto !important; max-height: 45vh !important; margin: 10px !important; }
+        }
+      `}</style>
+
       {/* MENU NAVIGASI NAVBAR */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '75px', backgroundColor: 'rgba(5, 8, 17, 0.75)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 60px', zIndex: 100, borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
         <div style={{ fontWeight: '900', fontSize: '12pt', color: '#ffffff', cursor: 'pointer', letterSpacing: '1.5px' }} onClick={() => scrollToSection(homeRef)}>
@@ -352,11 +363,11 @@ export default function GeoCircleDashboard() {
       </nav>
 
       {/* HERO SECTION */}
-      <section ref={homeRef} style={{ ...getRevealStyle(0), position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '100px 8% 40px 8%', background: 'radial-gradient(circle at 15% 30%, rgba(168, 85, 247, 0.06) 0%, rgba(5, 8, 17, 1) 60%)', gap: '40px', boxSizing: 'border-box', overflow: 'hidden' }}>
+      <section ref={homeRef} className="hero-section" style={{ ...getRevealStyle(0), position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '100px 8% 40px 8%', background: 'radial-gradient(circle at 15% 30%, rgba(168, 85, 247, 0.06) 0%, rgba(5, 8, 17, 1) 60%)', gap: '40px', boxSizing: 'border-box', overflow: 'hidden' }}>
         <MathBlurBackground />
         
         {/* Sisi Kiri: Judul & CTA */}
-        <div style={{ zIndex: 2, position: 'relative', flex: '1.2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="hero-text" style={{ zIndex: 2, position: 'relative', flex: '1.2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h1 style={{ fontSize: '42pt', fontWeight: '900', color: '#ffffff', marginBottom: '20px', letterSpacing: '-2px', lineHeight: '1.1' }}>
             GEO CIRCLE <span style={{ background: 'linear-gradient(to right, #a855f7, #d946ef)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>3D</span>
           </h1>
@@ -377,9 +388,8 @@ export default function GeoCircleDashboard() {
         </div>
 
         {/* Sisi Kanan: Roda Dekorasi Pas & Dijamin Tidak Potong */}
-        <div style={{ flex: '0.8', position: 'relative', width: '100%', height: '450px', zIndex: 2, cursor: 'grab' }}>
+        <div style={{ flex: '0.8', position: 'relative', width: '100%', height: '400px', zIndex: 2, cursor: 'grab' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-            {/* Kamera diset proporsional, objek aman karena radiusnya sudah ramping */}
             <Canvas camera={{ position: [0, 0, 5.8], fov: 42 }} style={{ width: '100%', height: '100%' }}>
               <ambientLight intensity={0.7} />
               <directionalLight position={[2, 2, 2]} intensity={0.8} />
@@ -396,7 +406,7 @@ export default function GeoCircleDashboard() {
         <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px', fontWeight: '500' }}>Kelompok 3 Program Studi Pendidikan Matematika FKIP Universitas Jember 2026</p>
         
         <h3 style={{ fontSize: '11pt', fontWeight: '700', color: '#a855f7', borderBottom: '1px solid #111827', paddingBottom: '10px', marginBottom: '25px', letterSpacing: '1px' }}>DOSEN PEMBIMBING</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', marginBottom: '60px' }}>
+        <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', marginBottom: '60px' }}>
           <div 
             onMouseEnter={(e) => handleMouseEnter(e, 'rgba(168, 85, 247, 0.15)', '1.02')}
             onMouseLeave={(e) => handleMouseLeave(e, 'none')}
@@ -416,7 +426,7 @@ export default function GeoCircleDashboard() {
         </div>
 
         <h3 style={{ fontSize: '11pt', fontWeight: '700', color: '#a855f7', borderBottom: '1px solid #111827', paddingBottom: '10px', marginBottom: '25px', letterSpacing: '1px' }}>ANGGOTA KELOMPOK</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+        <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
           {[
             { nama: "Arif Luqman Hakim", nim: "250210101104" },
             { nama: "Dita Rohmawati", nim: "250210101113" },
@@ -447,8 +457,7 @@ export default function GeoCircleDashboard() {
           <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Fitur Utama</h2>
           <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Mengapa belajar menggunakan Geo Circle 3D jauh lebih mudah?</p>
           
-          {/* marginTop diset 30px agar proporsi jarak judul ke grid sama rapi seperti section lainnya */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '25px', marginTop: '30px' }}>
+          <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '25px', marginTop: '30px' }}>
             {[
               { id: 'f1', title: 'Papan Paku Bisa Diputar dari Segala Arah', detail: 'Tidak hanya melihat gambar lingkaran mati dari satu sisi saja. Papan ini bisa diputar ke atas, bawah, kiri, kanan, serta diperbesar atau diperkecil untuk melihat bentuk asli tiang paku dan ikatan karetnya secara lebih nyata.' },
               { id: 'f2', title: 'Klik Paku untuk Memasang Karet', detail: 'Sama seperti papan paku kayu di sekolah, dengan hanya mengarahkan kursor dan mengklik paku mana saja pada lingkaran, tali karet otomatis langsung terpasang rapi mengikuti paku yang dipilih.' },
@@ -523,7 +532,7 @@ export default function GeoCircleDashboard() {
               { 
                 id: 'm2', 
                 title: 'Apa itu Sudut Keliling Lingkaran (∠BAC)?', 
-                detail: 'Sudut Keliling adalah sudut yang dibentuk di dalam lingkaran, namun berbeda dengan sudut pusat, titik pojok atau titik sudutnya berada pas menempel di sepanjang garis tepi atau keliling lingkaran (Titik A). Kedua kaki sudut yang memanjang dari titik pojok ini tidak menggunakan jari-jari, melainkan berupa tali busur lingkaran (Garis lurus yang menghubungkan dua titik di tepi lingkaran tanpa melewati pusat), yaitu Garis AB dan Garis AC.',
+                detail: 'Sudut Keliling adalah sudut yang dibentuk di dalam lingkaran, namun berbeda dengan sudut pusat, titik pojok atau titik sudutnya berada pas menempel di sepanjang garis tepi atau keliling lingkaran (Titik A). Kedua kaki sudut yang memanjang dari titik pojok ini tidak menggunakan jari-jari, mirb tali busur lingkaran (Garis lurus yang menghubungkan dua titik di tepi lingkaran tanpa melewati pusat), yaitu Garis AB dan Garis AC.',
                 imageUrl: 'https://imgix2.ruangguru.com/assets/miscellaneous/png_3mkh9n_9866.png', 
                 sumberNama: 'roboguru.ruangguru.com', 
                 sumberUrl: 'https://imgix2.ruangguru.com/assets/miscellaneous/png_3mkh9n_9866.png', 
@@ -564,10 +573,8 @@ export default function GeoCircleDashboard() {
                 <div style={{ height: expandedMateri[item.id] ? 'auto' : '0px', overflow: 'hidden', marginTop: expandedMateri[item.id] ? '20px' : '0px', transition: 'all 0.3s' }}>
                   <div style={{ fontSize: '9.5pt', color: '#94a3b8', lineHeight: '1.75', margin: 0, borderTop: '1px solid #111827', paddingTop: '15px', textAlign: 'justify' }}>
                     
-                    {/* Teks Deskripsi Materi */}
                     <p style={{ margin: '0 0 20px 0' }}>{item.detail}</p>
                     
-                    {/* AREA GAMBAR DAN SUMBER LINK */}
                     {item.imageUrl && item.imageUrl !== '' && !item.imageUrl.startsWith('ISI_URL') && (
                       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' }}>
                         <img 
@@ -583,7 +590,6 @@ export default function GeoCircleDashboard() {
                             boxShadow: '0 15px 30px rgba(0,0,0,0.5)'
                           }} 
                         />
-                        {/* TEKS SUMBER DI BAWAH GAMBAR */}
                         {item.sumberUrl && (
                           <span style={{ fontSize: '8pt', color: '#475569', marginTop: '8px', fontFamily: 'sans-serif' }}>
                             Sumber: {' '}
@@ -603,7 +609,6 @@ export default function GeoCircleDashboard() {
                       </div>
                     )}
 
-                    {/* BOX PENANDA/KETERANGAN DINAMIS */}
                     {item.keterangan && (
                       <div style={{ padding: '16px 20px', background: '#050811', borderRadius: '8px', border: '1px solid #111827', fontFamily: 'system-ui', fontSize: '8.5pt', color: '#64748b', lineHeight: '1.6' }}>
                         {item.keterangan}
@@ -626,10 +631,10 @@ export default function GeoCircleDashboard() {
           MODAL SIMULATOR: TIMBUL & INTERAKTIF LUAR BIASA
          ========================================== */}
       {showSimulasi && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#050811', zIndex: 1000, overflow: 'hidden', display: 'flex', flexDirection: 'row', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
+        <div className="simulator-container" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#050811', zIndex: 1000, overflow: 'auto', display: 'flex', flexDirection: 'row', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
           
           {/* PANEL KONTROL KIRI */}
-          <div style={{ 
+          <div className="simulator-panel" style={{ 
             position: 'relative', 
             margin: '15px 0 15px 15px', 
             zIndex: 1010, 
@@ -651,7 +656,6 @@ export default function GeoCircleDashboard() {
             overflowY: 'auto' 
           }}>
             
-            {/* HEADER & TOMBOL KEMBALI TIMBUL */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '10px', flexShrink: 0 }}>
               <div>
                 <div style={{ fontWeight: '900', fontSize: '10pt', color: '#ffffff', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
@@ -687,7 +691,6 @@ export default function GeoCircleDashboard() {
               Klik lingkaran 3D atau ketik derajat pada input di bawah.
             </p>
             
-            {/* TOMBOL PILIHAN MODE TIMBUL */}
             <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
               <button 
                 onClick={() => setTargetSumbu('B')} 
@@ -733,7 +736,6 @@ export default function GeoCircleDashboard() {
               </button>
             </div>
 
-            {/* INFO AUTOMATIC NAIL */}
             <div style={{ background: 'rgba(6, 182, 212, 0.04)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(6, 182, 212, 0.12)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
@@ -742,7 +744,6 @@ export default function GeoCircleDashboard() {
               <p style={{ fontSize: '8pt', color: '#94a3b8', margin: 0, paddingLeft: '10px', marginTop: '2px' }}>Posisi seimbang di seberang busur: <b style={{ color: '#06b6d4', fontFamily: 'monospace' }}>{sudutA}°</b></p>
             </div>
 
-            {/* AREA METRICS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
               <div style={{ background: '#090f20', border: '1px solid #1e293b', padding: '12px', borderRadius: '10px' }}>
                 <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>SUDUT PUSAT (∠BOC)</span>
@@ -761,12 +762,10 @@ export default function GeoCircleDashboard() {
               </div>
             </div>
 
-            {/* BOX PEMBUKTIAN */}
             <div style={{ background: 'rgba(168, 85, 247, 0.04)', padding: '12px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(168, 85, 247, 0.15)', fontSize: '9.5pt', fontWeight: '700', color: '#c084fc', fontFamily: 'monospace', flexShrink: 0 }}>
               {sudutPusat}° = 2 × {sudutKeliling}° <span style={{ color: '#34d399', marginLeft: '3px' }}>✓</span>
             </div>
 
-            {/* INPUT TEKS PINTAR */}
             <div style={{ flexShrink: 0, display: 'flex', gap: '10px', borderTop: '1px solid #1e293b', paddingTop: '12px', marginTop: 'auto' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                 <span style={{ fontSize: '7pt', color: '#f97316', fontWeight: '800' }}>PAKU ORANYE (°)</span>
@@ -776,7 +775,7 @@ export default function GeoCircleDashboard() {
                   value={textInputB} 
                   onChange={(e) => handleCustomInputChange('B', e.target.value)}
                   onBlur={() => handleInputBlur('B', sudutB)}
-                  style={{ background: '#090f20', border: '1px solid rgba(249, 115, 22, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s', ':focus': { borderColor: '#f97316' } }}
+                  style={{ background: '#090f20', border: '1px solid rgba(249, 115, 22, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s' }}
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
@@ -787,14 +786,14 @@ export default function GeoCircleDashboard() {
                   value={textInputC} 
                   onChange={(e) => handleCustomInputChange('C', e.target.value)}
                   onBlur={() => handleInputBlur('C', sudutC)}
-                  style={{ background: '#090f20', border: '1px solid rgba(217, 70, 239, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s', ':focus': { borderColor: '#d946ef' } }}
+                  style={{ background: '#090f20', border: '1px solid rgba(217, 70, 239, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s' }}
                 />
               </div>
             </div>
           </div>
 
           {/* AREA RENDERING CANVAS 3D SIMULATOR */}
-          <div style={{ flex: 1, height: '100%', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: '450px', position: 'relative', overflow: 'hidden' }}>
             <Canvas camera={{ position: [0, 0, 5.5], fov: 46 }} style={{ display: 'block', width: '100%', height: '100%' }}>
               <color attach="background" args={['#050811']} />
               <ambientLight intensity={0.6} />
