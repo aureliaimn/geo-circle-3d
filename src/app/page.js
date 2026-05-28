@@ -1,54 +1,94 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useState, useEffect, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Center, Line, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-// 1. KOMPONEN GENERATOR PAKU DIGITAL + GARIS JARI-JARI (MENDUKUNG TEMA DINAMIS)
-function JajaranPaku({ radius, onSelectPaku, aktifB, aktifC, aktifA, targetSumbu, isDarkMode }) {
+// ==========================================
+// DEKORASI: LINGKARAN BERPUTAR OTOMATIS DI HERO (JUDUL)
+// ==========================================
+function RodaDekorasiOtomatis() {
+  const groupRef = useRef();
+  
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.getElapsedTime() * 0.15;
+      groupRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.05) * 0.1;
+    }
+  });
+
+  const pakuDekor = [];
+  // Radius dikecilkan ke 1.6 agar pas di frame landing page & tidak kepotong
+  const radius = 1.6; 
+  
+  for (let i = 0; i < 360; i += 15) {
+    const rad = (90 - i) * Math.PI / 180;
+    const x = radius * Math.cos(rad);
+    const y = radius * Math.sin(rad);
+    pakuDekor.push(
+      <mesh key={i} position={[x, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.08, 8]} />
+        <meshStandardMaterial color={i % 45 === 0 ? "#a855f7" : "#334155"} emissive={i % 45 === 0 ? "#a855f7" : "#000000"} emissiveIntensity={0.5} />
+      </mesh>
+    );
+  }
+
+  return (
+    <group ref={groupRef}>
+      {pakuDekor}
+      <mesh rotation={[0, 0, 0]}>
+        <torusGeometry args={[radius, 0.012, 8, 64]} />
+        <meshStandardMaterial color="#475569" transparent opacity={0.4} roughness={0.1} />
+      </mesh>
+      <Line points={[[0,0,0], [0, radius, 0]]} color="#f97316" lineWidth={2} />
+      <Line points={[[0,0,0], [radius * Math.cos(-Math.PI/6), radius * Math.sin(-Math.PI/6), 0]]} color="#d946ef" lineWidth={2} />
+      <Line points={[[0, radius, 0], [radius * Math.cos(Math.PI * 1.1), radius * Math.sin(Math.PI * 1.1), 0], [radius * Math.cos(-Math.PI/6), radius * Math.sin(-Math.PI/6), 0]]} color="#06b6d4" lineWidth={2} />
+    </group>
+  );
+}
+
+// ==========================================
+// 1. KOMPONEN UTAMA PAPAN PAKU 3D
+// ==========================================
+function JajaranPaku({ radius, onSelectPaku, aktifB, aktifC, aktifA, targetSumbu }) {
   const pakuArray = [];
   const posO = new THREE.Vector3(0, 0, 0.05); 
   
   for (let i = 0; i < 360; i += 1) {
     const radianKoding = (90 - i) * Math.PI / 180;
-    const x = radius * Math.cos(radianKoding);
-    const y = radius * Math.sin(radianKoding);
+    const x = (radius - 0.2) * Math.cos(radianKoding);
+    const y = (radius - 0.2) * Math.sin(radianKoding);
     const posPaku = new THREE.Vector3(x, y, 0.05);
     
     const isKelipatan10 = (i % 10 === 0);
     const isKelipatan5 = (i % 5 === 0) && !isKelipatan10;
     
-    let tebalPaku = 0.012; 
-    let tinggiPaku = 0.07;
+    let tebalPaku = 0.022; 
+    let tinggiPaku = 0.08;
     
     if (isKelipatan10 || isKelipatan5) {
-      tebalPaku = 0.03;   
-      tinggiPaku = 0.15;
+      tebalPaku = 0.032;   
+      tinggiPaku = 0.18;
     }
 
-    // Warna paku & garis menyesuaikan dengan tema dark/light
-    let warnaPaku = isKelipatan10 || isKelipatan5 
-      ? (isDarkMode ? "#475569" : "#64748b") 
-      : (isDarkMode ? "#94a3b8" : "#cbd5e1");
+    let warnaPaku = isKelipatan10 || isKelipatan5 ? "#94a3b8" : "#475569";
 
-    if (i === aktifA) warnaPaku = "#3b82f6"; 
-    if (i === aktifB) warnaPaku = "#ef4444"; 
-    if (i === aktifC) warnaPaku = "#facc15"; 
+    if (i === aktifA) warnaPaku = "#06b6d4"; 
+    if (i === aktifB) warnaPaku = "#f97316"; 
+    if (i === aktifC) warnaPaku = "#d946ef"; 
 
     const bisaDiklik = targetSumbu === 'B' || targetSumbu === 'C';
 
     pakuArray.push(
       <group key={i}>
-        {/* Garis Jari-Jari (Disesuaikan kontrasnya berdasarkan tema) */}
         <Line
           points={[posO, posPaku]}
-          color={isDarkMode ? "#334155" : "#94a3b8"} 
-          lineWidth={1.5} 
+          color="#334155" 
+          lineWidth={1} 
           transparent={true}
-          opacity={isDarkMode ? 0.6 : 0.45}
+          opacity={0.15}
         />
 
-        {/* Objek Paku */}
         <group position={[x, y, tinggiPaku / 2]}>
           <mesh 
             rotation={[Math.PI / 2, 0, 0]} 
@@ -59,26 +99,32 @@ function JajaranPaku({ radius, onSelectPaku, aktifB, aktifC, aktifA, targetSumbu
             style={{ cursor: bisaDiklik ? 'pointer' : 'default' }}
           >
             <cylinderGeometry args={[tebalPaku, tebalPaku, tinggiPaku, 12]} />
-            <meshStandardMaterial color={warnaPaku} roughness={0.1} metalness={0.5} />
+            <meshStandardMaterial 
+              color={warnaPaku} 
+              roughness={0.1} 
+              metalness={0.9} 
+              emissive={warnaPaku} 
+              emissiveIntensity={i === aktifA || i === aktifB || i === aktifC ? 0.9 : 0.03} 
+            />
           </mesh>
 
           {isKelipatan10 && (
             <Html 
               distanceFactor={6} 
-              position={[0, 0, 0.1]} 
+              position={[0, 0, 0.16]} 
               center 
               style={{
                 pointerEvents: 'none',
                 userSelect: 'none',
-                fontFamily: 'sans-serif',
-                fontSize: '8.5px',
-                fontWeight: 'bold',
-                color: i === aktifA ? '#3b82f6' : i === aktifB ? '#ef4444' : i === aktifC ? (isDarkMode ? '#fde047' : '#ca8a04') : (isDarkMode ? '#cbd5e1' : '#475569'),
-                backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(241, 245, 249, 0.85)',
-                padding: '1px 3px',
-                borderRadius: '3px',
+                fontFamily: 'system-ui, sans-serif',
+                fontSize: '8px',
+                fontWeight: '700',
+                color: i === aktifA ? '#06b6d4' : i === aktifB ? '#f97316' : i === aktifC ? '#d946ef' : '#94a3b8',
+                backgroundColor: 'rgba(5, 7, 15, 0.85)',
+                padding: '2px 4px',
+                borderRadius: '4px',
                 whiteSpace: 'nowrap',
-                border: isDarkMode ? '1px solid #1e293b' : '1px solid #cbd5e1'
+                border: '1px solid rgba(255, 255, 255, 0.05)'
               }}
             >
               {i}°
@@ -91,25 +137,120 @@ function JajaranPaku({ radius, onSelectPaku, aktifB, aktifC, aktifA, targetSumbu
   return <>{pakuArray}</>;
 }
 
-// 2. KOMPONEN UTAMA GEO CIRCLE PRO WITH TOGGLE THEME
-export default function GeoCircle3D() {
+// ==========================================
+// 2. HALAMAN UTAMA APLIKASI
+// ==========================================
+export default function GeoCircleDashboard() {
+  const [showSimulasi, setShowSimulasi] = useState(false); 
   const [sudutB, setSudutB] = useState(0);    
-  const [sudutC, setSudutC] = useState(90);   
-  const [sudutA, setSudutA] = useState(225);  
+  const [sudutC, setSudutC] = useState(340);    
+  const [sudutA, setSudutA] = useState(170);   
   const [targetSumbu, setTargetSumbu] = useState('B'); 
-  const [isDarkMode, setIsDarkMode] = useState(false); // BARU: State kontrol tema (default light mode / putih)
   
-  const radius = 3; 
+  const [expandedFitur, setExpandedFitur] = useState({});
+  const [expandedMateri, setExpandedMateri] = useState({});
+
+  const [textInputB, setTextInputB] = useState("0");
+  const [textInputC, setTextInputC] = useState("340");
 
   useEffect(() => {
-    let selisih = sudutC - sudutB;
-    if (selisih < 0) selisih += 360;
+    setTextInputB(sudutB.toString());
+  }, [sudutB]);
+
+  useEffect(() => {
+    setTextInputC(sudutC.toString());
+  }, [sudutC]);
+
+  const styleInteraktifButton = {
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: 'pointer'
+  };
+
+  // Helper animasi interaktif timbul untuk tombol-tombol
+  const handleMouseEnter = (e, shadowColor = 'rgba(168, 85, 247, 0.4)', scale = '1.04') => {
+    e.currentTarget.style.transform = `translateY(-4px) scale(${scale})`;
+    e.currentTarget.style.boxShadow = `0 12px 30px -4px ${shadowColor}`;
+  };
+
+  const handleMouseLeave = (e, defaultShadow = 'none') => {
+    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+    e.currentTarget.style.boxShadow = defaultShadow;
+  };
+
+  const handleMouseDown = (e) => {
+    e.currentTarget.style.transform = 'translateY(-1px) scale(0.98)';
+  };
+
+  const toggleExpandFitur = (id) => {
+    setExpandedFitur(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleExpandMateri = (id) => {
+    setExpandedMateri(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const radius = 3; 
+  const rPaku = radius - 0.2;
+
+  const homeRef = useRef(null);
+  const timRef = useRef(null);
+  const fiturRef = useRef(null);
+  const panduanRef = useRef(null);
+  const materiRef = useRef(null);
+
+  // --- KODE TRANSISE REVEAL BERGANTIAN (SMOOTH SLIDE-UP) ---
+  const [revealedSections, setRevealedSections] = useState({});
+  
+  useEffect(() => {
+    const sections = [homeRef, timRef, fiturRef, panduanRef, materiRef];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = sections.findIndex(ref => ref.current === entry.target);
+            if (index !== -1) {
+              setRevealedSections(prev => ({ ...prev, [index]: true }));
+            }
+          }
+        });
+      },
+      { threshold: 0.08 }
+    );
+
+    sections.forEach(ref => {
+      if (ref.current) observer.observe(ref.current);
+    });
+
+    return () => {
+      sections.forEach(ref => {
+        if (ref.current) observer.unobserve(ref.current);
+      });
+    };
+  }, []);
+
+  const getRevealStyle = (index) => ({
+    opacity: revealedSections[index] ? 1 : 0,
+    transform: revealedSections[index] ? 'translateY(0)' : 'translateY(40px)',
+    transition: 'all 0.85s cubic-bezier(0.215, 0.610, 0.355, 1.000)',
+  });
+  // --------------------------------------------------------
+
+  const scrollToSection = (elementRef) => {
+    window.scrollTo({
+      top: elementRef.current.offsetTop - 70, 
+      behavior: 'smooth'
+    });
+  };
+
+  useEffect(() => {
+    let diff = sudutC - sudutB;
+    if (diff < 0) diff += 360;
 
     let sudutTengah;
-    if (selisih > 180) {
-      sudutTengah = sudutB + (selisih / 2);
+    if (diff > 180) {
+      sudutTengah = sudutB + (diff / 2);
     } else {
-      sudutTengah = sudutC + ((360 - selisih) / 2);
+      sudutTengah = sudutC + ((360 - diff) / 2);
     }
     
     let hasilSudut = Math.round(sudutTengah) % 360;
@@ -118,7 +259,7 @@ export default function GeoCircle3D() {
 
   const getKoordinat = (derajat) => {
     const radianKoding = (90 - derajat) * Math.PI / 180;
-    return new THREE.Vector3(radius * Math.cos(radianKoding), radius * Math.sin(radianKoding), 0.06);
+    return new THREE.Vector3(rPaku * Math.cos(radianKoding), rPaku * Math.sin(radianKoding), 0.06);
   };
 
   const posO = new THREE.Vector3(0, 0, 0.06); 
@@ -139,162 +280,552 @@ export default function GeoCircle3D() {
     else if (targetSumbu === 'C') setSudutC(derajat);
   };
 
+  const handleCustomInputChange = (type, value) => {
+    if (type === 'B') setTextInputB(value);
+    if (type === 'C') setTextInputC(value);
+
+    if (value === "") return;
+
+    let num = parseInt(value, 10);
+    if (!isNaN(num)) {
+      const derajatValid = ((num % 360) + 360) % 360;
+      if (type === 'B') setSudutB(derajatValid);
+      if (type === 'C') setSudutC(derajatValid);
+    }
+  };
+
+  const handleInputBlur = (type, currentSudut) => {
+    if (type === 'B' && textInputB === "") setTextInputB(currentSudut.toString());
+    if (type === 'C' && textInputC === "") setTextInputC(currentSudut.toString());
+  };
+
+  const MathBlurBackground = () => (
+    <div style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 1 }}>
+      <div style={{ position: 'absolute', top: '15%', left: '5%', fontSize: '64pt', fontWeight: '800', color: 'rgba(168, 85, 247, 0.03)', filter: 'blur(4px)', transform: 'rotate(-12deg)', fontFamily: 'monospace' }}>∠BOC = 2∠BAC</div>
+      <div style={{ position: 'absolute', bottom: '25%', right: '8%', fontSize: '80pt', fontWeight: '800', color: 'rgba(6, 182, 212, 0.03)', filter: 'blur(5px)', transform: 'rotate(18deg)', fontFamily: 'monospace' }}>r = 2.8px</div>
+    </div>
+  );
+
   return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      backgroundColor: isDarkMode ? '#0f172a' : '#ffffff', // Dinamis
-      overflow: 'hidden', 
-      position: 'relative', 
-      fontFamily: 'sans-serif',
-      transition: 'background-color 0.3s ease'
-    }}>
+    <div style={{ backgroundColor: '#050811', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#f8fafc', letterSpacing: '-0.2px', overflowX: 'hidden' }}>
       
-      {/* PANEL HUD KONTROL - BERUBAH WARNA SESUAI TEMA */}
-      <div style={{ 
-        position: 'absolute', 
-        top: '20px', 
-        left: '20px', 
-        zIndex: 10, 
-        background: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)', 
-        padding: '25px', 
-        borderRadius: '12px', 
-        color: isDarkMode ? '#f8fafc' : '#1e293b', 
-        width: '340px', 
-        backdropFilter: 'blur(10px)', 
-        border: isDarkMode ? '1px solid #334155' : '1px solid #cbd5e1', 
-        boxShadow: isDarkMode ? '0 20px 25px -5px rgba(0,0,0,0.5)' : '0 20px 25px -5px rgba(0,0,0,0.1)',
-        transition: 'all 0.3s ease'
-      }}>
+      {/* MENU NAVIGASI NAVBAR */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '75px', backgroundColor: 'rgba(5, 8, 17, 0.75)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 60px', zIndex: 100, borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+        <div style={{ fontWeight: '900', fontSize: '12pt', color: '#ffffff', cursor: 'pointer', letterSpacing: '1.5px' }} onClick={() => scrollToSection(homeRef)}>
+          GEO CIRCLE <span style={{ background: 'linear-gradient(to right, #a855f7, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>3D</span>
+        </div>
+        <div style={{ display: 'flex', gap: '35px' }}>
+          {['Tim Pengembang', 'Fitur Utama', 'Panduan', 'Materi Dasar'].map((text, index) => {
+            const refs = [timRef, fiturRef, panduanRef, materiRef];
+            return (
+              <span 
+                key={text}
+                onClick={() => scrollToSection(refs[index])} 
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.children[0].style.width = '100%';
+                  e.currentTarget.children[0].style.left = '0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#64748b';
+                  e.currentTarget.children[0].style.width = '0%';
+                  e.currentTarget.children[0].style.left = '50%';
+                }}
+                style={{ 
+                  position: 'relative',
+                  cursor: 'pointer', 
+                  fontSize: '8.5pt', 
+                  fontWeight: '700', 
+                  color: '#64748b', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  padding: '8px 0',
+                  transition: 'color 0.25s ease' 
+                }}
+              >
+                {text}
+                <span style={{ position: 'absolute', bottom: 0, left: '50%', width: '0%', height: '2px', background: 'linear-gradient(to right, #a855f7, #06b6d4)', transition: 'all 0.25s ease', borderRadius: '2px' }} />
+              </span>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* HERO SECTION */}
+      <section ref={homeRef} style={{ ...getRevealStyle(0), position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '100px 8% 40px 8%', background: 'radial-gradient(circle at 15% 30%, rgba(168, 85, 247, 0.06) 0%, rgba(5, 8, 17, 1) 60%)', gap: '40px', boxSizing: 'border-box', overflow: 'hidden' }}>
+        <MathBlurBackground />
         
-        {/* HEADER & BUTTON TOGGLE DARK MODE */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h2 style={{ fontSize: '14pt', margin: 0, color: isDarkMode ? '#38bdf8' : '#0284c7', fontWeight: 'bold' }}>Geo Circle 3D</h2>
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)} 
-            style={{
-              background: isDarkMode ? '#facc15' : '#1e293b',
-              color: isDarkMode ? '#0f172a' : '#ffffff',
-              border: 'none',
-              padding: '6px 10px',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              fontSize: '8.5pt',
-              fontWeight: 'bold',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}
+        {/* Sisi Kiri: Judul & CTA */}
+        <div style={{ zIndex: 2, position: 'relative', flex: '1.2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h1 style={{ fontSize: '42pt', fontWeight: '900', color: '#ffffff', marginBottom: '20px', letterSpacing: '-2px', lineHeight: '1.1' }}>
+            GEO CIRCLE <span style={{ background: 'linear-gradient(to right, #a855f7, #d946ef)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>3D</span>
+          </h1>
+          <p style={{ fontSize: '11pt', color: '#94a3b8', maxWidth: '500px', lineHeight: '1.75', marginBottom: '40px', fontWeight: '400' }}>
+            Aplikasi papan paku matematika digital dalam bentuk 3D. Membantu kamu memahami rumus <span style={{ color: '#f97316', fontWeight: '600' }}>Sudut Pusat</span> dan <span style={{ color: '#06b6d4', fontWeight: '600' }}>Sudut Keliling</span> lingkaran dengan interaktif.
+          </p>
+          <div>
+            <button 
+              onClick={() => setShowSimulasi(true)}
+              onMouseEnter={(e) => handleMouseEnter(e, 'rgba(168, 85, 247, 0.5)', '1.05')}
+              onMouseLeave={(e) => handleMouseLeave(e)}
+              onMouseDown={handleMouseDown}
+              style={{ ...styleInteraktifButton, padding: '16px 44px', fontSize: '10pt', fontWeight: '700', color: '#ffffff', backgroundColor: '#a855f7', border: 'none', borderRadius: '10px', boxShadow: '0 10px 25px -5px rgba(168, 85, 247, 0.3)' }}
+            >
+              ▶ Mulai
+            </button>
+          </div>
+        </div>
+
+        {/* Sisi Kanan: Roda Dekorasi Pas & Dijamin Tidak Potong */}
+        <div style={{ flex: '0.8', position: 'relative', width: '100%', height: '450px', zIndex: 2, cursor: 'grab' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+            {/* Kamera diset proporsional, objek aman karena radiusnya sudah ramping */}
+            <Canvas camera={{ position: [0, 0, 5.8], fov: 42 }} style={{ width: '100%', height: '100%' }}>
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[2, 2, 2]} intensity={0.8} />
+              <RodaDekorasiOtomatis />
+              <OrbitControls enableZoom={false} enablePan={false} />
+            </Canvas>
+          </div>
+        </div>
+      </section>
+
+      {/* TIM PENGEMBANG */}
+      <section ref={timRef} style={{ ...getRevealStyle(1), position: 'relative', padding: '100px 50px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Tim Pengembang</h2>
+        <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px', fontWeight: '500' }}>Kelompok 3 Program Studi Pendidikan Matematika FKIP Universitas Jember 2026</p>
+        
+        <h3 style={{ fontSize: '11pt', fontWeight: '700', color: '#a855f7', borderBottom: '1px solid #111827', paddingBottom: '10px', marginBottom: '25px', letterSpacing: '1px' }}>DOSEN PEMBIMBING</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', marginBottom: '60px' }}>
+          <div 
+            onMouseEnter={(e) => handleMouseEnter(e, 'rgba(168, 85, 247, 0.15)', '1.02')}
+            onMouseLeave={(e) => handleMouseLeave(e, 'none')}
+            style={{ transition: 'all 0.3s ease', background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', borderLeft: '4px solid #a855f7', cursor: 'default' }}
           >
-            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
-          </button>
-        </div>
-
-        <p style={{ fontSize: '8.5pt', color: isDarkMode ? '#94a3b8' : '#64748b', marginBottom: '15px', lineHeight: '1.4' }}>
-          Pilih paku Merah/Kuning, lalu klik strip derajat mana saja pada papan untuk menggeser karet secara real-time.
-        </p>
-        
-        <div style={{ margin: '15px 0', display: 'flex', gap: '8px' }}>
-          <button onClick={() => setTargetSumbu('B')} style={{ background: targetSumbu === 'B' ? '#ef4444' : (isDarkMode ? '#334155' : '#e2e8f0'), color: targetSumbu === 'B' ? 'white' : (isDarkMode ? '#cbd5e1' : '#475569'), border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '8.5pt', flex: 1, borderBottom: targetSumbu === 'B' ? '3px solid #b91c1c' : 'none' }}>Set Paku B (Merah)</button>
-          <button onClick={() => setTargetSumbu('C')} style={{ background: targetSumbu === 'C' ? '#facc15' : (isDarkMode ? '#334155' : '#e2e8f0'), color: targetSumbu === 'C' ? '#0f172a' : (isDarkMode ? '#cbd5e1' : '#475569'), border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '8.5pt', flex: 1, borderBottom: targetSumbu === 'C' ? '3px solid #eab308' : 'none' }}>Set Paku C (Kuning)</button>
-        </div>
-
-        <div style={{ background: isDarkMode ? 'rgba(15, 23, 42, 0.5)' : '#f8fafc', padding: '10px', borderRadius: '6px', marginBottom: '15px', border: isDarkMode ? '1px dashed #475569' : '1px dashed #cbd5e1' }}>
-          <span style={{ fontSize: '8pt', color: isDarkMode ? '#60a5fa' : '#2563eb', fontWeight: 'bold' }}>🔒 STATUS PAKU BIRU (A):</span>
-          <p style={{ fontSize: '8pt', color: isDarkMode ? '#cbd5e1' : '#475569', margin: '2px 0 0 0' }}>Terkunci otomatis ke derajat terdekat (&nbsp;<b style={{color: isDarkMode ? '#60a5fa' : '#2563eb'}}>{sudutA}°</b>&nbsp;) agar sudut keliling selalu pas setengah.</p>
-        </div>
-
-        {/* AREA INDIKATOR LINGKARAN */}
-        <div style={{ borderTop: isDarkMode ? '1px solid #334155' : '1px solid #e2e8f0', paddingTop: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'transparent', border: '2px solid #ef4444', flexShrink: 0 }} />
-            <p style={{ fontSize: '11pt', margin: 0 }}>Sudut Pusat (&ang;BOC): <b style={{ color: '#ef4444', fontSize: '14pt' }}>{sudutPusat}&deg;</b></p>
+            <h4 style={{ fontSize: '11.5pt', margin: '0 0 6px 0', fontWeight: '700', color: '#ffffff' }}>Dr. Abi Suwito, S.Pd., M.Pd.</h4>
+            <span style={{ fontSize: '8.5pt', color: '#64748b', fontWeight: '700', fontFamily: 'monospace' }}>NIP. 198502112012121001</span>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'transparent', border: '2px solid #3b82f6', flexShrink: 0 }} />
-            <p style={{ fontSize: '11pt', margin: 0 }}>Sudut Keliling (&ang;BAC): <b style={{ color: '#3b82f6', fontSize: '14pt' }}>{sudutKeliling}&deg;</b></p>
+          <div 
+            onMouseEnter={(e) => handleMouseEnter(e, 'rgba(168, 85, 247, 0.15)', '1.02')}
+            onMouseLeave={(e) => handleMouseLeave(e, 'none')}
+            style={{ transition: 'all 0.3s ease', background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', borderLeft: '4px solid #a855f7', cursor: 'default' }}
+          >
+            <h4 style={{ fontSize: '11.5pt', margin: '0 0 6px 0', fontWeight: '700', color: '#ffffff' }}>Dr. Frenza Fairuz Firmansyah, S.Stat., M.Stat.</h4>
+            <span style={{ fontSize: '8.5pt', color: '#64748b', fontWeight: '700', fontFamily: 'monospace' }}>NIP. 199511112024061002</span>
           </div>
         </div>
-      </div>
 
-      {/* INDIKATOR TOMBOL PANAH ROTATE 3D */}
-      <div style={{ 
-        position: 'absolute', 
-        bottom: '20px', 
-        right: '20px', 
-        zIndex: 10, 
-        background: 'transparent', 
-        padding: '10px 16px', 
-        borderRadius: '30px', 
-        color: isDarkMode ? '#38bdf8' : '#0284c7', 
-        border: isDarkMode ? '1px solid #0284c7' : '1px solid #0284c7', 
-        boxShadow: isDarkMode ? '0 4px 6px -1px rgba(0,0,0,0.3)' : '0 4px 6px -1px rgba(0,0,0,0.05)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px', 
-        fontSize: '9.5pt', 
-        fontWeight: 'bold', 
-        pointerEvents: 'none', 
-        userSelect: 'none' 
-      }}>
-        <span>🔄 Drag Layar Untuk Rotate 3D</span>
-      </div>
+        <h3 style={{ fontSize: '11pt', fontWeight: '700', color: '#a855f7', borderBottom: '1px solid #111827', paddingBottom: '10px', marginBottom: '25px', letterSpacing: '1px' }}>ANGGOTA KELOMPOK</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+          {[
+            { nama: "Arif Luqman Hakim", nim: "250210101104" },
+            { nama: "Dita Rohmawati", nim: "250210101113" },
+            { nama: "Revanny Izzy Aulia", nim: "250210101115" },
+            { nama: "Callista Veda Venindra", nim: "250210101124" },
+            { nama: "Delila Nasyidah", nim: "250210101125" },
+            { nama: "Nurul Azidah Azzahro", nim: "250210101127" },
+          ].map((mhs, idx) => (
+            <div 
+              key={idx} 
+              onMouseEnter={(e) => handleMouseEnter(e, 'rgba(6, 182, 212, 0.12)', '1.03')}
+              onMouseLeave={(e) => handleMouseLeave(e, 'none')}
+              style={{ transition: 'all 0.3s ease', background: '#090d16', padding: '25px', borderRadius: '12px', border: '1px solid #111827', textAlign: 'center', cursor: 'default' }}
+            >
+              <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'rgba(168, 85, 247, 0.06)', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto', fontWeight: '800', fontSize: '11pt', border: '1px solid rgba(168, 85, 247, 0.15)' }}>
+                {idx + 1}
+              </div>
+              <h4 style={{ fontSize: '10.5pt', margin: '0 0 4px 0', fontWeight: '700', color: '#ffffff' }}>{mhs.nama}</h4>
+              <p style={{ fontSize: '9pt', color: '#64748b', margin: 0, fontFamily: 'monospace' }}>NIM. {mhs.nim}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* RENDER GRAPHIC CANVAS 3D */}
-      <Canvas camera={{ position: [0, 0, 7], fov: 50 }}>
-        {/* Mengubah background canvas secara dinamis mengikuti state */}
-        <color attach="background" args={[isDarkMode ? '#0f172a' : '#ffffff']} />
+      {/* FITUR UTAMA */}
+      <section ref={fiturRef} style={{ ...getRevealStyle(2), position: 'relative', padding: '100px 50px', backgroundColor: '#03060d' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+          <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Fitur Utama</h2>
+          <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Mengapa belajar menggunakan Geo Circle 3D jauh lebih mudah?</p>
+          
+          {/* marginTop diset 30px agar proporsi jarak judul ke grid sama rapi seperti section lainnya */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '25px', marginTop: '30px' }}>
+            {[
+              { id: 'f1', title: 'Papan Paku Bisa Diputar dari Segala Arah', detail: 'Tidak hanya melihat gambar lingkaran mati dari satu sisi saja. Papan ini bisa diputar ke atas, bawah, kiri, kanan, serta diperbesar atau diperkecil untuk melihat bentuk asli tiang paku dan ikatan karetnya secara lebih nyata.' },
+              { id: 'f2', title: 'Klik Paku untuk Memasang Karet', detail: 'Sama seperti papan paku kayu di sekolah, dengan hanya mengarahkan kursor dan mengklik paku mana saja pada lingkaran, tali karet otomatis langsung terpasang rapi mengikuti paku yang dipilih.' },
+              { id: 'f3', title: 'Input Angka Derajat Langsung', detail: 'Jika ingin memasang karet dengan presisi tepat di angka derajat tertentu, cukup ketikkan angka derajatnya (0° sampai 359°) pada kotak input yang tersedia. Karet akan langsung berubah ke posisi paku yang sesuai dengan angka tersebut.' },
+              { id: 'f4', title: 'Hitung Ukuran Sudut Otomatis Sekaligus', detail: 'Setiap kali paku oranye atau ungu digeser, angka derajat sudut pusat dan sudut keliling di layar akan langsung berubah secara otomatis, sehingga tidak perlu lagi repot menghitung manual pakai busur derajat.' },
+            ].map((item, idx) => (
+              <div key={item.id} onClick={() => toggleExpandFitur(item.id)} style={{ background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <span style={{ fontWeight: '800', color: '#06b6d4', fontSize: '12pt', fontFamily: 'monospace' }}>[0{idx + 1}]</span>
+                    <h3 style={{ fontSize: '11pt', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '-0.2px' }}>{item.title}</h3>
+                  </div>
+                  <span style={{ color: '#a855f7', fontSize: '14pt', fontWeight: '700' }}>{expandedFitur[item.id] ? '−' : '+'}</span>
+                </div>
+                <div style={{ height: expandedFitur[item.id] ? 'auto' : '0px', overflow: 'hidden', marginTop: expandedFitur[item.id] ? '20px' : '0px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                  <p style={{ fontSize: '9.5pt', color: '#94a3b8', lineHeight: '1.7', margin: 0, borderTop: '1px solid #111827', paddingTop: '15px' }}>{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PANDUAN BELAJAR */}
+      <section ref={panduanRef} style={{ ...getRevealStyle(3), padding: '100px 50px', maxWidth: '1000px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Panduan</h2>
+        <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Ikuti langkah berikut untuk membuktikan rumus lingkaran di dalam simulator.</p>
         
-        <ambientLight intensity={isDarkMode ? 0.6 : 0.8} />
-        <directionalLight position={[5, 5, 5]} intensity={isDarkMode ? 1.0 : 1.2} />
-        
-        <Center>
-          {/* Lapisan Utama Tersembunyi */}
-          <mesh position={[0, 0, 0]}>
-            <cylinderGeometry args={[radius, radius, 0.1, 64]} />
-            <meshStandardMaterial transparent={true} opacity={0} />
-          </mesh>
+        <div style={{ background: '#090d16', padding: '40px', borderRadius: '16px', border: '1px solid #111827' }}>
+          {[
+            { step: "1", title: "Pilih Karet yang Ingin Digeser", desc: "Klik tombol 'SET PAKU ORANYE' atau 'SET PAKU UNGU' pada menu bagian kiri untuk menentukan karet mana yang akan pindahkan." },
+            { step: "2", title: "Klik Derajat di Lingkaran", desc: "Arahkan kursor to papan paku lingkaran 3D, lalu klik pada salah satu derajat yang diinginkan untuk menempelkan ujung karet." },
+            { step: "3", title: "Input Angka Derajatnya", desc: "Jika kesulitan mengklik paku, bisa langsung mengetikkan angka derajatnya (0° sampai 359°) pada kotak input di menu bagian bawah." },
+            { step: "4", title: "Lihat Hasil Perbandingannya", desc: "Perhatikan kotak hasil di sebelah kiri. Ukuran Sudut Pusat (Karet Oranye-Ungu) pasti selalu berukuran tepat 2 kali lipat dari ukuran Sudut Keliling (Karet Biru)." }
+          ].map((item, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: '25px', marginBottom: idx === 3 ? 0 : '30px' }}>
+              <div style={{ fontWeight: '800', color: '#a855f7', fontSize: '14pt', fontFamily: 'monospace', marginTop: '2px' }}>{item.step}</div>
+              <div>
+                <h4 style={{ fontWeight: '700', fontSize: '11pt', marginBottom: '6px', color: '#ffffff' }}>{item.title}</h4>
+                <p style={{ fontSize: '9.5pt', color: '#94a3b8', margin: 0, lineHeight: '1.6' }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          {/* Jajaran Paku Komplit dengan Garis Jari-Jari */}
-          <JajaranPaku 
-            radius={radius - 0.2} 
-            onSelectPaku={handlePakuClick} 
-            aktifB={sudutB} 
-            aktifC={sudutC} 
-            aktifA={sudutA} 
-            targetSumbu={targetSumbu}
-            isDarkMode={isDarkMode}
-          />
+      {/* MATERI DASAR LINGKARAN */}
+      <section ref={materiRef} style={{ ...getRevealStyle(4), position: 'relative', padding: '100px 50px 120px 50px', backgroundColor: '#03060d' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
+          <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Materi Dasar Matematika</h2>
+          <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Klik judul materi di bawah ini untuk membaca penjelasan lengkapnya.</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {[
+              { 
+                id: 'm1', 
+                title: 'Apa itu Sudut Pusat Lingkaran (∠BOC)?', 
+                detail: 'Sudut Pusat adalah sudut yang terbentuk di dalam lingkaran, di mana titik sudut atau pojok bangun sudutnya terletak tepat di titik pusat lingkaran (Titik O). Sementara itu, kedua kaki sudutnya merupakan garis jari-jari lingkaran yang membentang dari pusat menuju ke arah tepi atau keliling lingkaran (Garis OB dan Garis OC). Ukuran sudut pusat ini dibatasi oleh busur lingkaran yang terbentuk di antara kedua kaki sudutnya tersebut.',
+                imageUrl: 'https://i0.wp.com/rumushitung.com/wp-content/uploads/2014/12/sudut-pusat-dan-sudut-keliling-lingkaran.png?ssl=1', 
+                sumberNama: 'RumusHitung.com', 
+                sumberUrl: 'https://i0.wp.com/rumushitung.com/wp-content/uploads/2014/12/sudut-pusat-dan-sudut-keliling-lingkaran.png?ssl=1',
+                keterangan: (
+                  <>
+                    <span style={{color: '#ffffff', fontWeight: 'bold'}}>KOMPONEN SUDUT PUSAT DI SIMULATOR:</span><br/>
+                    • <b style={{color: '#ffffff'}}>Titik O (Paku Tengah)</b> = Berperan sebagai pusat lingkaran sekaligus titik pojok dari Sudut Pusat.<br/>
+                    • <b style={{color: '#ffffff'}}>Garis OB (Karet Oranye)</b> = Jari-jari lingkaran pertama yang mengarah ke paku pembatas B.<br/>
+                    • <b style={{color: '#ffffff'}}>Garis OC (Karet Ungu)</b> = Jari-jari lingkaran kedua yang mengarah ke paku pembatas C.<br/>
+                    • <b style={{color: '#ffffff'}}>∠BOC (Sudut Pusat)</b> = Daerah ruang sudut yang terbentuk tepat di tengah-tengah papan paku.
+                  </>
+                )
+              },
+              { 
+                id: 'm2', 
+                title: 'Apa itu Sudut Keliling Lingkaran (∠BAC)?', 
+                detail: 'Sudut Keliling adalah sudut yang dibentuk di dalam lingkaran, namun berbeda dengan sudut pusat, titik pojok atau titik sudutnya berada pas menempel di sepanjang garis tepi atau keliling lingkaran (Titik A). Kedua kaki sudut yang memanjang dari titik pojok ini tidak menggunakan jari-jari, melainkan berupa tali busur lingkaran (Garis lurus yang menghubungkan dua titik di tepi lingkaran tanpa melewati pusat), yaitu Garis AB dan Garis AC.',
+                imageUrl: 'https://imgix2.ruangguru.com/assets/miscellaneous/png_3mkh9n_9866.png', 
+                sumberNama: 'roboguru.ruangguru.com', 
+                sumberUrl: 'https://imgix2.ruangguru.com/assets/miscellaneous/png_3mkh9n_9866.png', 
+                keterangan: (
+                  <>
+                    <span style={{color: '#ffffff', fontWeight: 'bold'}}>KOMPONEN SUDUT KELILING DI SIMULATOR:</span><br/>
+                    • <b style={{color: '#ffffff'}}>Titik A (Paku Biru otomatis)</b> = Titik sudut keliling yang posisinya selalu menyesuaikan di seberang busur.<br/>
+                    • <b style={{color: '#ffffff'}}>Garis AB & AC (Karet Biru)</b> = Dua buah tali busur lingkaran yang menjulur membentuk kaki Sudut Keliling.<br/>
+                    • <b style={{color: '#ffffff'}}>∠BAC (Sudut Keliling)</b> = Daerah ruang sudut tajam yang terbentuk tepat di tepi keliling lingkaran.
+                  </>
+                )
+              },
+              { 
+                id: 'm3', 
+                title: 'Hubungan Sudut Pusat dan Sudut Keliling', 
+                detail: 'Teorema sudut pusat sama dengan dua kali sudut keliling yang menghadap busur sama merupakan bagian dari geometri Euklides kuno. Teorema ini umumnya dikaitkan dengan Thales dari Miletus (sekitar 624–546 SM) sebagai bagian dari studi awalnya tentang lingkaran dan sifat-sifat tali busur. Ketika sebuah Sudut Pusat (∠BOC) and Sudut Keliling (∠BAC) berada di dalam lingkaran yang sama dan keduanya menghadap arah lengkungan/busur lingkaran yang sama (dalam simulator ini yaitu busur BC), berlaku sebuah sifat mutlak matematika: Besar ukuran Sudut Pusat nilainya akan selalu tepat 2 kali lipat lebih besar dibandingkan ukuran Sudut Keliling. Sebaliknya, ukuran Sudut Keliling bernilai tepat setengah (1/2) dari ukuran Sudut Pusat.',
+                imageUrl: 'https://www.geogebra.org/resource/AtUcVfSe/bpa1Q1zY4oMQeTDE/material-AtUcVfSe.png', 
+                sumberNama: 'geogebra.org', 
+                sumberUrl: 'https://www.geogebra.org/resource/AtUcVfSe/bpa1Q1zY4oMQeTDE/material-AtUcVfSe.png', 
+                keterangan: (
+                  <>
+                    <span style={{color: '#ffffff', fontWeight: 'bold'}}>RUMUS HUBUNGAN & APRESIASI MATEMATIKA:</span><br/>
+                    • <b style={{color: '#ffffff'}}>Syarat Utama</b> = Sudut karet Oranye-Ungu dan Sudut karet Biru harus sama-sama berhenti di paku B dan paku C.<br/>
+                    • <b style={{color: '#ffffff'}}>Rumus Eksperimen</b> = <code style={{background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#34d399'}}>Sudut Pusat = 2 × Sudut Keliling</code> atau ditulis <code style={{background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#34d399'}}>∠BOC = 2 × ∠BAC</code>.<br/>
+                    • <b style={{color: '#ffffff'}}>Bukti Nyata</b> = Jika kamu geser paku B atau C hingga nilai sudut keliling terbaca 45° di panel simulasi, maka sudut pusat otomatis mendeteksi angka 90° secara presisi (Perbandingan selalu konsisten 2 : 1).
+                  </>
+                )
+              }
+            ].map((item, idx) => (
+              <div key={item.id} onClick={() => toggleExpandMateri(item.id)} style={{ background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <span style={{ fontWeight: '800', color: '#d946ef', fontSize: '11pt', fontFamily: 'monospace' }}>MATERI 0{idx + 1}</span>
+                    <h3 style={{ fontSize: '11pt', fontWeight: '700', margin: 0, color: '#ffffff' }}>{item.title}</h3>
+                  </div>
+                  <span style={{ color: '#06b6d4', fontSize: '14pt', fontWeight: '700' }}>{expandedMateri[item.id] ? '−' : '+'}</span>
+                </div>
+                <div style={{ height: expandedMateri[item.id] ? 'auto' : '0px', overflow: 'hidden', marginTop: expandedMateri[item.id] ? '20px' : '0px', transition: 'all 0.3s' }}>
+                  <div style={{ fontSize: '9.5pt', color: '#94a3b8', lineHeight: '1.75', margin: 0, borderTop: '1px solid #111827', paddingTop: '15px', textAlign: 'justify' }}>
+                    
+                    {/* Teks Deskripsi Materi */}
+                    <p style={{ margin: '0 0 20px 0' }}>{item.detail}</p>
+                    
+                    {/* AREA GAMBAR DAN SUMBER LINK */}
+                    {item.imageUrl && item.imageUrl !== '' && !item.imageUrl.startsWith('ISI_URL') && (
+                      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' }}>
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.title} 
+                          onClick={(e) => e.stopPropagation()} 
+                          style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: '280px', 
+                            borderRadius: '8px', 
+                            objectFit: 'contain', 
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            boxShadow: '0 15px 30px rgba(0,0,0,0.5)'
+                          }} 
+                        />
+                        {/* TEKS SUMBER DI BAWAH GAMBAR */}
+                        {item.sumberUrl && (
+                          <span style={{ fontSize: '8pt', color: '#475569', marginTop: '8px', fontFamily: 'sans-serif' }}>
+                            Sumber: {' '}
+                            <a 
+                              href={item.sumberUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()} 
+                              style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500', borderBottom: '1px dashed rgba(6, 182, 212, 0.4)', paddingBottom: '1px' }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = '#a855f7'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = '#06b6d4'}
+                            >
+                              {item.sumberNama || item.sumberUrl}
+                            </a>
+                          </span>
+                        )}
+                      </div>
+                    )}
 
-          {/* Paku Pusat Tengah O */}
-          <mesh position={[0, 0, 0.05]}>
-            <sphereGeometry args={[0.06, 16, 16]} />
-            <meshStandardMaterial color={isDarkMode ? "#cbd5e1" : "#475569"} />
-          </mesh>
+                    {/* BOX PENANDA/KETERANGAN DINAMIS */}
+                    {item.keterangan && (
+                      <div style={{ padding: '16px 20px', background: '#050811', borderRadius: '8px', border: '1px solid #111827', fontFamily: 'system-ui', fontSize: '8.5pt', color: '#64748b', lineHeight: '1.6' }}>
+                        {item.keterangan}
+                      </div>
+                    )}
 
-          {/* SEGMEN GARIS KARET MERAH (O -> B) */}
-          <Line
-            points={[posO, posB]} 
-            color="#ef4444" 
-            lineWidth={6} 
-          />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* SEGMEN GARIS KARET KUNING (O -> C) */}
-          <Line
-            points={[posO, posC]} 
-            color="#facc15" 
-            lineWidth={6} 
-          />
+      <footer style={{ backgroundColor: '#02040a', color: '#475569', padding: '35px 50px', textAlign: 'center', fontSize: '8.5pt', borderTop: '1px solid #090d16', letterSpacing: '0.5px', fontWeight: '500' }}>
+        &copy; {new Date().getFullYear()} GEO CIRCLE 3D. All rights reserved.
+      </footer>
 
-          {/* TALI KARET BIRU (SUDUT KELILING B -> A -> C) */}
-          <Line
-            points={[posB, posA, posC]} 
-            color="#3b82f6" 
-            lineWidth={6} 
-          />
-        </Center>
+      {/* ==========================================
+          MODAL SIMULATOR: TIMBUL & INTERAKTIF LUAR BIASA
+         ========================================== */}
+      {showSimulasi && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#050811', zIndex: 1000, overflow: 'hidden', display: 'flex', flexDirection: 'row', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
+          
+          {/* PANEL KONTROL KIRI */}
+          <div style={{ 
+            position: 'relative', 
+            margin: '15px 0 15px 15px', 
+            zIndex: 1010, 
+            backgroundColor: '#050915', 
+            padding: '20px', 
+            borderRadius: '12px', 
+            color: '#e2e8f0', 
+            width: '350px', 
+            minWidth: '350px', 
+            height: 'calc(100vh - 30px)', 
+            maxHeight: 'calc(100vh - 30px)', 
+            border: '1px solid #1e293b', 
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'flex-start', 
+            gap: '14px', 
+            boxSizing: 'border-box', 
+            overflowY: 'auto' 
+          }}>
+            
+            {/* HEADER & TOMBOL KEMBALI TIMBUL */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '10px', flexShrink: 0 }}>
+              <div>
+                <div style={{ fontWeight: '900', fontSize: '10pt', color: '#ffffff', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  GEO CIRCLE 3D
+                </div>
+                <div style={{ fontSize: '7pt', fontWeight: '700', color: '#06b6d4', letterSpacing: '1.2px', textTransform: 'uppercase', marginTop: '1px' }}>
+                  Alat Peraga Simulasi 3D
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowSimulasi(false)} 
+                onMouseEnter={(e) => handleMouseEnter(e, 'rgba(239, 68, 68, 0.3)', '1.05')}
+                onMouseLeave={(e) => handleMouseLeave(e)}
+                onMouseDown={handleMouseDown}
+                style={{ 
+                  ...styleInteraktifButton,
+                  background: 'rgba(239, 68, 68, 0.08)', 
+                  color: '#ef4444', 
+                  border: '1px solid rgba(239, 68, 68, 0.25)', 
+                  padding: '6px 14px', 
+                  borderRadius: '6px', 
+                  fontSize: '7.5pt', 
+                  fontWeight: '700', 
+                  letterSpacing: '0.5px', 
+                  outline: 'none'
+                }}
+              >
+                KEMBALI
+              </button>
+            </div>
 
-        <OrbitControls enablePan={true} enableZoom={true} minDistance={3} maxDistance={12} makeDefault />
-      </Canvas>
+            <p style={{ fontSize: '8pt', color: '#94a3b8', lineHeight: '1.4', margin: 0, fontStyle: 'italic', flexShrink: 0 }}>
+              Klik lingkaran 3D atau ketik derajat pada input di bawah.
+            </p>
+            
+            {/* TOMBOL PILIHAN MODE TIMBUL */}
+            <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+              <button 
+                onClick={() => setTargetSumbu('B')} 
+                onMouseEnter={(e) => handleMouseEnter(e, targetSumbu === 'B' ? 'rgba(249, 115, 22, 0.4)' : 'rgba(249, 115, 22, 0.15)', '1.03')}
+                onMouseLeave={(e) => handleMouseLeave(e)}
+                onMouseDown={handleMouseDown}
+                style={{ 
+                  ...styleInteraktifButton,
+                  background: targetSumbu === 'B' ? '#f97316' : '#0f172a', 
+                  color: targetSumbu === 'B' ? 'white' : '#f97316', 
+                  border: targetSumbu === 'B' ? '1px solid #f97316' : '1px solid rgba(249, 115, 22, 0.3)', 
+                  padding: '10px 0', 
+                  borderRadius: '8px', 
+                  fontWeight: '800', 
+                  fontSize: '7.5pt', 
+                  flex: 1,
+                  outline: 'none',
+                  boxShadow: targetSumbu === 'B' ? '0 4px 12px rgba(249, 115, 22, 0.2)' : 'none'
+                }}
+              >
+                SET PAKU ORANYE
+              </button>
+              <button 
+                onClick={() => setTargetSumbu('C')} 
+                onMouseEnter={(e) => handleMouseEnter(e, targetSumbu === 'C' ? 'rgba(217, 70, 239, 0.4)' : 'rgba(217, 70, 239, 0.15)', '1.03')}
+                onMouseLeave={(e) => handleMouseLeave(e)}
+                onMouseDown={handleMouseDown}
+                style={{ 
+                  ...styleInteraktifButton,
+                  background: targetSumbu === 'C' ? '#d946ef' : '#0f172a', 
+                  color: targetSumbu === 'C' ? 'white' : '#d946ef', 
+                  border: targetSumbu === 'C' ? '1px solid #d946ef' : '1px solid rgba(217, 70, 239, 0.3)', 
+                  padding: '10px 0', 
+                  borderRadius: '8px', 
+                  fontWeight: '800', 
+                  fontSize: '7.5pt', 
+                  flex: 1,
+                  outline: 'none',
+                  boxShadow: targetSumbu === 'C' ? '0 4px 12px rgba(217, 70, 239, 0.2)' : 'none'
+                }}
+              >
+                SET PAKU UNGU
+              </button>
+            </div>
+
+            {/* INFO AUTOMATIC NAIL */}
+            <div style={{ background: 'rgba(6, 182, 212, 0.04)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(6, 182, 212, 0.12)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
+                <span style={{ fontSize: '7pt', color: '#06b6d4', fontWeight: '800' }}>PAKU A - TERKUNCI OTOMATIS</span>
+              </div>
+              <p style={{ fontSize: '8pt', color: '#94a3b8', margin: 0, paddingLeft: '10px', marginTop: '2px' }}>Posisi seimbang di seberang busur: <b style={{ color: '#06b6d4', fontFamily: 'monospace' }}>{sudutA}°</b></p>
+            </div>
+
+            {/* AREA METRICS */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
+              <div style={{ background: '#090f20', border: '1px solid #1e293b', padding: '12px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>SUDUT PUSAT (∠BOC)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#d946ef' }} />
+                  <span style={{ color: '#ffffff', fontSize: '20pt', fontWeight: '900', fontFamily: 'monospace' }}>{sudutPusat}°</span>
+                </div>
+              </div>
+
+              <div style={{ background: '#090f20', border: '1px solid #1e293b', padding: '12px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>SUDUT KELILING (∠BAC)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
+                  <span style={{ color: '#ffffff', fontSize: '20pt', fontWeight: '900', fontFamily: 'monospace' }}>{sudutKeliling}°</span>
+                </div>
+              </div>
+            </div>
+
+            {/* BOX PEMBUKTIAN */}
+            <div style={{ background: 'rgba(168, 85, 247, 0.04)', padding: '12px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(168, 85, 247, 0.15)', fontSize: '9.5pt', fontWeight: '700', color: '#c084fc', fontFamily: 'monospace', flexShrink: 0 }}>
+              {sudutPusat}° = 2 × {sudutKeliling}° <span style={{ color: '#34d399', marginLeft: '3px' }}>✓</span>
+            </div>
+
+            {/* INPUT TEKS PINTAR */}
+            <div style={{ flexShrink: 0, display: 'flex', gap: '10px', borderTop: '1px solid #1e293b', paddingTop: '12px', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                <span style={{ fontSize: '7pt', color: '#f97316', fontWeight: '800' }}>PAKU ORANYE (°)</span>
+                <input 
+                  type="text" 
+                  inputMode="numeric"
+                  value={textInputB} 
+                  onChange={(e) => handleCustomInputChange('B', e.target.value)}
+                  onBlur={() => handleInputBlur('B', sudutB)}
+                  style={{ background: '#090f20', border: '1px solid rgba(249, 115, 22, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s', ':focus': { borderColor: '#f97316' } }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                <span style={{ fontSize: '7pt', color: '#d946ef', fontWeight: '800' }}>PAKU UNGU (°)</span>
+                <input 
+                  type="text" 
+                  inputMode="numeric"
+                  value={textInputC} 
+                  onChange={(e) => handleCustomInputChange('C', e.target.value)}
+                  onBlur={() => handleInputBlur('C', sudutC)}
+                  style={{ background: '#090f20', border: '1px solid rgba(217, 70, 239, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s', ':focus': { borderColor: '#d946ef' } }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* AREA RENDERING CANVAS 3D SIMULATOR */}
+          <div style={{ flex: 1, height: '100%', position: 'relative', overflow: 'hidden' }}>
+            <Canvas camera={{ position: [0, 0, 5.5], fov: 46 }} style={{ display: 'block', width: '100%', height: '100%' }}>
+              <color attach="background" args={['#050811']} />
+              <ambientLight intensity={0.6} />
+              <directionalLight position={[5, 5, 5]} intensity={0.9} />
+              <pointLight position={[-5, -5, 3]} intensity={0.6} color="#a855f7" />
+              
+              <Center>
+                <JajaranPaku 
+                  radius={radius} 
+                  onSelectPaku={handlePakuClick} 
+                  aktifB={sudutB} 
+                  aktifC={sudutC} 
+                  aktifA={sudutA} 
+                  targetSumbu={targetSumbu}
+                />
+
+                <mesh position={[0, 0, 0.05]}>
+                  <sphereGeometry args={[0.06, 16, 16]} />
+                  <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8} />
+                </mesh>
+
+                <Line points={[posO, posB]} color="#f97316" lineWidth={4.5} /> 
+                <Line points={[posO, posC]} color="#d946ef" lineWidth={4.5} /> 
+                <Line points={[posB, posA, posC]} color="#06b6d4" lineWidth={4.5} /> 
+              </Center>
+
+              <OrbitControls enablePan={false} enableZoom={true} minDistance={4} maxDistance={10} makeDefault />
+            </Canvas>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
