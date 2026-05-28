@@ -141,6 +141,7 @@ function JajaranPaku({ radius, onSelectPaku, aktifB, aktifC, aktifA, targetSumbu
 // ==========================================
 export default function GeoCircleDashboard() {
   const [showSimulasi, setShowSimulasi] = useState(false); 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // State menu HP
   const [sudutB, setSudutB] = useState(0);    
   const [sudutC, setSudutC] = useState(340);    
   const [sudutA, setSudutA] = useState(170);   
@@ -232,6 +233,7 @@ export default function GeoCircleDashboard() {
   });
 
   const scrollToSection = (elementRef) => {
+    setMobileMenuOpen(false); // Tutup menu HP saat diklik
     window.scrollTo({
       top: elementRef.current.offsetTop - 70, 
       behavior: 'smooth'
@@ -305,68 +307,98 @@ export default function GeoCircleDashboard() {
   return (
     <div style={{ backgroundColor: '#050811', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#f8fafc', letterSpacing: '-0.2px', overflowX: 'hidden' }}>
       
-      {/* INJEKSI STYLE RESPONSIVE (MEDIA QUERIES) UNTUK HP AGAR ANTI RUSAK */}
+      {/* CSS MEDIA QUERIES KOREKSI TOTAL */}
       <style>{`
         @media (max-width: 768px) {
-          nav { padding: 0 20px !important; height: 60px !important; }
-          nav div:last-child { display: none !important; } /* Sembunyikan menu teks navbar di HP */
+          nav { padding: 0 20px !important; height: 65px !important; }
+          .desktop-menu { display: none !important; } 
+          .hamburger-btn { display: flex !important; }
           section { padding: 60px 20px !important; }
-          .hero-section { flex-direction: column-reverse !important; text-align: center !important; padding-top: 90px !important; }
-          .hero-text h1 { fontSize: '28pt' !important; }
-          .hero-text p { maxWidth: '100%' !important; }
+          .hero-section { flex-direction: column-reverse !important; text-align: center !important; padding-top: 100px !important; }
+          .hero-text h1 { font-size: 28pt !important; }
+          .hero-text p { max-width: 100% !important; }
           .grid-responsive { grid-template-columns: 1fr !important; }
-          .simulator-container { flexDirection: column !important; }
-          .simulator-panel { width: 100% !important; minWidth: 100% !important; height: auto !important; max-height: 45vh !important; margin: 10px !important; }
+          
+          /* LAYOUT MODAL SIMULATOR DI HP */
+          .sim-container-fix { flex-direction: column !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 10px !important; gap: 10px !important; }
+          .sim-panel-fix { width: 100% !important; min-width: 100% !important; height: auto !important; max-height: none !important; margin: 0 !important; order: 2 !important; }
+          .sim-canvas-fix { width: 100% !important; height: 380px !important; min-height: 380px !important; order: 1 !important; border-radius: 12px !important; overflow: hidden !important; }
         }
       `}</style>
 
-      {/* MENU NAVIGASI NAVBAR */}
+      {/* NAVBAR */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '75px', backgroundColor: 'rgba(5, 8, 17, 0.75)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 60px', zIndex: 100, borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
         <div style={{ fontWeight: '900', fontSize: '12pt', color: '#ffffff', cursor: 'pointer', letterSpacing: '1.5px' }} onClick={() => scrollToSection(homeRef)}>
           GEO CIRCLE <span style={{ background: 'linear-gradient(to right, #a855f7, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>3D</span>
         </div>
-        <div style={{ display: 'flex', gap: '35px' }}>
+        
+        {/* Menu Navigasi Desktop */}
+        <div className="desktop-menu" style={{ display: 'flex', gap: '35px' }}>
           {['Tim Pengembang', 'Fitur Utama', 'Panduan', 'Materi Dasar'].map((text, index) => {
             const refs = [timRef, fiturRef, panduanRef, materiRef];
             return (
               <span 
                 key={text}
                 onClick={() => scrollToSection(refs[index])} 
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.children[0].style.width = '100%';
-                  e.currentTarget.children[0].style.left = '0';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#64748b';
-                  e.currentTarget.children[0].style.width = '0%';
-                  e.currentTarget.children[0].style.left = '50%';
-                }}
                 style={{ 
-                  position: 'relative',
-                  cursor: 'pointer', 
-                  fontSize: '8.5pt', 
-                  fontWeight: '700', 
-                  color: '#64748b', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1px', 
-                  padding: '8px 0',
-                  transition: 'color 0.25s ease' 
+                  position: 'relative', cursor: 'pointer', fontSize: '8.5pt', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', padding: '8px 0', transition: 'color 0.25s ease' 
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
               >
                 {text}
-                <span style={{ position: 'absolute', bottom: 0, left: '50%', width: '0%', height: '2px', background: 'linear-gradient(to right, #a855f7, #06b6d4)', transition: 'all 0.25s ease', borderRadius: '2px' }} />
               </span>
             );
           })}
         </div>
+
+        {/* Tombol Menu Hamburger (Hanya muncul di HP) */}
+        <button 
+          className="hamburger-btn" 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{
+            display: 'none', flexDirection: 'column', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', zIndex: 110, outline: 'none'
+          }}
+        >
+          <span style={{ width: '22px', height: '2px', backgroundColor: '#ffffff', borderRadius: '2px', transition: '0.3s', transform: mobileMenuOpen ? 'rotate(45deg) translateY(5px)' : 'none' }} />
+          <span style={{ width: '22px', height: '2px', backgroundColor: '#ffffff', borderRadius: '2px', transition: '0.3s', opacity: mobileMenuOpen ? 0 : 1 }} />
+          <span style={{ width: '22px', height: '2px', backgroundColor: '#ffffff', borderRadius: '2px', transition: '0.3s', transform: mobileMenuOpen ? 'rotate(-45deg) translateY(-5px)' : 'none' }} />
+        </button>
       </nav>
+
+      {/* LACI NAVIGASI MENU HP (MOBILE SIDEBAR DRAWER) */}
+      <div style={{
+        position: 'fixed', top: 0, right: 0, width: '260px', height: '100vh', backgroundColor: '#070b18', zIndex: 105, borderLeft: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '-10px 0 30px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', padding: '90px 24px 30px 24px', boxSizing: 'border-box', gap: '20px', transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(100%)'
+      }}>
+        {['Tim Pengembang', 'Fitur Utama', 'Panduan', 'Materi Dasar'].map((text, index) => {
+          const refs = [timRef, fiturRef, panduanRef, materiRef];
+          return (
+            <button
+              key={text}
+              onClick={() => scrollToSection(refs[index])}
+              style={{
+                background: 'none', border: 'none', color: '#94a3b8', fontSize: '10pt', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left', padding: '12px 0', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.02)'
+              }}
+              onClassName={(e) => e.currentTarget.style.color = '#ffffff'}
+            >
+              {text}
+            </button>
+          );
+        })}
+      </div>
+      
+      {/* Overlay Background Gelap saat Menu HP Terbuka */}
+      {mobileMenuOpen && (
+        <div 
+          onClick={() => setMobileMenuOpen(false)}
+          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 102 }}
+        />
+      )}
 
       {/* HERO SECTION */}
       <section ref={homeRef} className="hero-section" style={{ ...getRevealStyle(0), position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '100px 8% 40px 8%', background: 'radial-gradient(circle at 15% 30%, rgba(168, 85, 247, 0.06) 0%, rgba(5, 8, 17, 1) 60%)', gap: '40px', boxSizing: 'border-box', overflow: 'hidden' }}>
         <MathBlurBackground />
         
-        {/* Sisi Kiri: Judul & CTA */}
         <div className="hero-text" style={{ zIndex: 2, position: 'relative', flex: '1.2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h1 style={{ fontSize: '42pt', fontWeight: '900', color: '#ffffff', marginBottom: '20px', letterSpacing: '-2px', lineHeight: '1.1' }}>
             GEO CIRCLE <span style={{ background: 'linear-gradient(to right, #a855f7, #d946ef)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>3D</span>
@@ -382,12 +414,11 @@ export default function GeoCircleDashboard() {
               onMouseDown={handleMouseDown}
               style={{ ...styleInteraktifButton, padding: '16px 44px', fontSize: '10pt', fontWeight: '700', color: '#ffffff', backgroundColor: '#a855f7', border: 'none', borderRadius: '10px', boxShadow: '0 10px 25px -5px rgba(168, 85, 247, 0.3)' }}
             >
-              ▶ Mulai
+              ▶ Mulai Simulasi
             </button>
           </div>
         </div>
 
-        {/* Sisi Kanan: Roda Dekorasi Pas & Dijamin Tidak Potong */}
         <div style={{ flex: '0.8', position: 'relative', width: '100%', height: '400px', zIndex: 2, cursor: 'grab' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
             <Canvas camera={{ position: [0, 0, 5.8], fov: 42 }} style={{ width: '100%', height: '100%' }}>
@@ -407,19 +438,11 @@ export default function GeoCircleDashboard() {
         
         <h3 style={{ fontSize: '11pt', fontWeight: '700', color: '#a855f7', borderBottom: '1px solid #111827', paddingBottom: '10px', marginBottom: '25px', letterSpacing: '1px' }}>DOSEN PEMBIMBING</h3>
         <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', marginBottom: '60px' }}>
-          <div 
-            onMouseEnter={(e) => handleMouseEnter(e, 'rgba(168, 85, 247, 0.15)', '1.02')}
-            onMouseLeave={(e) => handleMouseLeave(e, 'none')}
-            style={{ transition: 'all 0.3s ease', background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', borderLeft: '4px solid #a855f7', cursor: 'default' }}
-          >
+          <div style={{ background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', borderLeft: '4px solid #a855f7' }}>
             <h4 style={{ fontSize: '11.5pt', margin: '0 0 6px 0', fontWeight: '700', color: '#ffffff' }}>Dr. Abi Suwito, S.Pd., M.Pd.</h4>
             <span style={{ fontSize: '8.5pt', color: '#64748b', fontWeight: '700', fontFamily: 'monospace' }}>NIP. 198502112012121001</span>
           </div>
-          <div 
-            onMouseEnter={(e) => handleMouseEnter(e, 'rgba(168, 85, 247, 0.15)', '1.02')}
-            onMouseLeave={(e) => handleMouseLeave(e, 'none')}
-            style={{ transition: 'all 0.3s ease', background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', borderLeft: '4px solid #a855f7', cursor: 'default' }}
-          >
+          <div style={{ background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', borderLeft: '4px solid #a855f7' }}>
             <h4 style={{ fontSize: '11.5pt', margin: '0 0 6px 0', fontWeight: '700', color: '#ffffff' }}>Dr. Frenza Fairuz Firmansyah, S.Stat., M.Stat.</h4>
             <span style={{ fontSize: '8.5pt', color: '#64748b', fontWeight: '700', fontFamily: 'monospace' }}>NIP. 199511112024061002</span>
           </div>
@@ -435,12 +458,7 @@ export default function GeoCircleDashboard() {
             { nama: "Delila Nasyidah", nim: "250210101125" },
             { nama: "Nurul Azidah Azzahro", nim: "250210101127" },
           ].map((mhs, idx) => (
-            <div 
-              key={idx} 
-              onMouseEnter={(e) => handleMouseEnter(e, 'rgba(6, 182, 212, 0.12)', '1.03')}
-              onMouseLeave={(e) => handleMouseLeave(e, 'none')}
-              style={{ transition: 'all 0.3s ease', background: '#090d16', padding: '25px', borderRadius: '12px', border: '1px solid #111827', textAlign: 'center', cursor: 'default' }}
-            >
+            <div key={idx} style={{ background: '#090d16', padding: '25px', borderRadius: '12px', border: '1px solid #111827', textAlign: 'center' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'rgba(168, 85, 247, 0.06)', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto', fontWeight: '800', fontSize: '11pt', border: '1px solid rgba(168, 85, 247, 0.15)' }}>
                 {idx + 1}
               </div>
@@ -453,26 +471,26 @@ export default function GeoCircleDashboard() {
 
       {/* FITUR UTAMA */}
       <section ref={fiturRef} style={{ ...getRevealStyle(2), position: 'relative', padding: '100px 50px', backgroundColor: '#03060d' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Fitur Utama</h2>
           <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Mengapa belajar menggunakan Geo Circle 3D jauh lebih mudah?</p>
           
-          <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '25px', marginTop: '30px' }}>
+          <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '25px' }}>
             {[
               { id: 'f1', title: 'Papan Paku Bisa Diputar dari Segala Arah', detail: 'Tidak hanya melihat gambar lingkaran mati dari satu sisi saja. Papan ini bisa diputar ke atas, bawah, kiri, kanan, serta diperbesar atau diperkecil untuk melihat bentuk asli tiang paku dan ikatan karetnya secara lebih nyata.' },
               { id: 'f2', title: 'Klik Paku untuk Memasang Karet', detail: 'Sama seperti papan paku kayu di sekolah, dengan hanya mengarahkan kursor dan mengklik paku mana saja pada lingkaran, tali karet otomatis langsung terpasang rapi mengikuti paku yang dipilih.' },
               { id: 'f3', title: 'Input Angka Derajat Langsung', detail: 'Jika ingin memasang karet dengan presisi tepat di angka derajat tertentu, cukup ketikkan angka derajatnya (0° sampai 359°) pada kotak input yang tersedia. Karet akan langsung berubah ke posisi paku yang sesuai dengan angka tersebut.' },
               { id: 'f4', title: 'Hitung Ukuran Sudut Otomatis Sekaligus', detail: 'Setiap kali paku oranye atau ungu digeser, angka derajat sudut pusat dan sudut keliling di layar akan langsung berubah secara otomatis, sehingga tidak perlu lagi repot menghitung manual pakai busur derajat.' },
             ].map((item, idx) => (
-              <div key={item.id} onClick={() => toggleExpandFitur(item.id)} style={{ background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+              <div key={item.id} onClick={() => toggleExpandFitur(item.id)} style={{ background: '#090d16', padding: '30px', borderRadius: '12px', border: '1px solid #111827', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <span style={{ fontWeight: '800', color: '#06b6d4', fontSize: '12pt', fontFamily: 'monospace' }}>[0{idx + 1}]</span>
-                    <h3 style={{ fontSize: '11pt', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '-0.2px' }}>{item.title}</h3>
+                    <h3 style={{ fontSize: '11pt', fontWeight: '700', margin: 0, color: '#ffffff' }}>{item.title}</h3>
                   </div>
                   <span style={{ color: '#a855f7', fontSize: '14pt', fontWeight: '700' }}>{expandedFitur[item.id] ? '−' : '+'}</span>
                 </div>
-                <div style={{ height: expandedFitur[item.id] ? 'auto' : '0px', overflow: 'hidden', marginTop: expandedFitur[item.id] ? '20px' : '0px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                <div style={{ height: expandedFitur[item.id] ? 'auto' : '0px', overflow: 'hidden', marginTop: expandedFitur[item.id] ? '20px' : '0px', transition: 'all 0.3s' }}>
                   <p style={{ fontSize: '9.5pt', color: '#94a3b8', lineHeight: '1.7', margin: 0, borderTop: '1px solid #111827', paddingTop: '15px' }}>{item.detail}</p>
                 </div>
               </div>
@@ -489,7 +507,7 @@ export default function GeoCircleDashboard() {
         <div style={{ background: '#090d16', padding: '40px', borderRadius: '16px', border: '1px solid #111827' }}>
           {[
             { step: "1", title: "Pilih Karet yang Ingin Digeser", desc: "Klik tombol 'SET PAKU ORANYE' atau 'SET PAKU UNGU' pada menu bagian kiri untuk menentukan karet mana yang akan pindahkan." },
-            { step: "2", title: "Klik Derajat di Lingkaran", desc: "Arahkan kursor to papan paku lingkaran 3D, lalu klik pada salah satu derajat yang diinginkan untuk menempelkan ujung karet." },
+            { step: "2", title: "Klik Derajat di Lingkaran", desc: "Arahkan kursor ke papan paku lingkaran 3D, lalu klik pada salah satu derajat yang diinginkan untuk menempelkan ujung karet." },
             { step: "3", title: "Input Angka Derajatnya", desc: "Jika kesulitan mengklik paku, bisa langsung mengetikkan angka derajatnya (0° sampai 359°) pada kotak input di menu bagian bawah." },
             { step: "4", title: "Lihat Hasil Perbandingannya", desc: "Perhatikan kotak hasil di sebelah kiri. Ukuran Sudut Pusat (Karet Oranye-Ungu) pasti selalu berukuran tepat 2 kali lipat dari ukuran Sudut Keliling (Karet Biru)." }
           ].map((item, idx) => (
@@ -506,8 +524,8 @@ export default function GeoCircleDashboard() {
 
       {/* MATERI DASAR LINGKARAN */}
       <section ref={materiRef} style={{ ...getRevealStyle(4), position: 'relative', padding: '100px 50px 120px 50px', backgroundColor: '#03060d' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
-          <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Materi Dasar</h2>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: '22pt', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Materi Dasar Matematika</h2>
           <p style={{ textAlign: 'center', color: '#64748b', fontSize: '10pt', marginBottom: '60px' }}>Klik judul materi di bawah ini untuk membaca penjelasan lengkapnya.</p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -532,7 +550,7 @@ export default function GeoCircleDashboard() {
               { 
                 id: 'm2', 
                 title: 'Apa itu Sudut Keliling Lingkaran (∠BAC)?', 
-                detail: 'Sudut Keliling adalah sudut yang dibentuk di dalam lingkaran, namun berbeda dengan sudut pusat, titik pojok atau titik sudutnya berada pas menempel di sepanjang garis tepi atau keliling lingkaran (Titik A). Kedua kaki sudut yang memanjang dari titik pojok ini tidak menggunakan jari-jari, mirb tali busur lingkaran (Garis lurus yang menghubungkan dua titik di tepi lingkaran tanpa melewati pusat), yaitu Garis AB dan Garis AC.',
+                detail: 'Sudut Keliling adalah sudut yang dibentuk di dalam lingkaran, namun berbeda dengan sudut pusat, titik pojok atau titik sudutnya berada pas menempel di sepanjang garis tepi atau keliling lingkaran (Titik A). Kedua kaki sudut yang memanjang dari titik pojok ini tidak menggunakan jari-jari, sondern tali busur lingkaran, yaitu Garis AB dan Garis AC.',
                 imageUrl: 'https://imgix2.ruangguru.com/assets/miscellaneous/png_3mkh9n_9866.png', 
                 sumberNama: 'roboguru.ruangguru.com', 
                 sumberUrl: 'https://imgix2.ruangguru.com/assets/miscellaneous/png_3mkh9n_9866.png', 
@@ -548,7 +566,7 @@ export default function GeoCircleDashboard() {
               { 
                 id: 'm3', 
                 title: 'Hubungan Sudut Pusat dan Sudut Keliling', 
-                detail: 'Teorema sudut pusat sama dengan dua kali sudut keliling yang menghadap busur sama merupakan bagian dari geometri Euklides kuno. Teorema ini umumnya dikaitkan dengan Thales dari Miletus (sekitar 624–546 SM) sebagai bagian dari studi awalnya tentang lingkaran dan sifat-sifat tali busur. Ketika sebuah Sudut Pusat (∠BOC) and Sudut Keliling (∠BAC) berada di dalam lingkaran yang sama dan keduanya menghadap arah lengkungan/busur lingkaran yang sama (dalam simulator ini yaitu busur BC), berlaku sebuah sifat mutlak matematika: Besar ukuran Sudut Pusat nilainya akan selalu tepat 2 kali lipat lebih besar dibandingkan ukuran Sudut Keliling. Sebaliknya, ukuran Sudut Keliling bernilai tepat setengah (1/2) dari ukuran Sudut Pusat.',
+                detail: 'Ketika sebuah Sudut Pusat (∠BOC) dan Sudut Keliling (∠BAC) berada di dalam lingkaran yang sama dan keduanya menghadap arah lengkungan/busur lingkaran yang sama (dalam simulator ini yaitu busur BC), berlaku sebuah sifat mutlak matematika: Besar ukuran Sudut Pusat nilainya akan selalu tepat 2 kali lipat lebih besar dibandingkan ukuran Sudut Keliling. Sebaliknya, ukuran Sudut Keliling bernilai tepat setengah (1/2) dari ukuran Sudut Pusat.',
                 imageUrl: 'https://www.geogebra.org/resource/AtUcVfSe/bpa1Q1zY4oMQeTDE/material-AtUcVfSe.png', 
                 sumberNama: 'geogebra.org', 
                 sumberUrl: 'https://www.geogebra.org/resource/AtUcVfSe/bpa1Q1zY4oMQeTDE/material-AtUcVfSe.png', 
@@ -556,8 +574,8 @@ export default function GeoCircleDashboard() {
                   <>
                     <span style={{color: '#ffffff', fontWeight: 'bold'}}>RUMUS HUBUNGAN & APRESIASI MATEMATIKA:</span><br/>
                     • <b style={{color: '#ffffff'}}>Syarat Utama</b> = Sudut karet Oranye-Ungu dan Sudut karet Biru harus sama-sama berhenti di paku B dan paku C.<br/>
-                    • <b style={{color: '#ffffff'}}>Rumus Eksperimen</b> = <code style={{background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#34d399'}}>Sudut Pusat = 2 × Sudut Keliling</code> atau ditulis <code style={{background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#34d399'}}>∠BOC = 2 × ∠BAC</code>.<br/>
-                    • <b style={{color: '#ffffff'}}>Bukti Nyata</b> = Jika kamu geser paku B atau C hingga nilai sudut keliling terbaca 45° di panel simulasi, maka sudut pusat otomatis mendeteksi angka 90° secara presisi (Perbandingan selalu konsisten 2 : 1).
+                    • <b style={{color: '#ffffff'}}>Rumus Eksperimen</b> = <code style={{background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#34d399'}}>Sudut Pusat = 2 × Sudut Keliling</code>.<br/>
+                    • <b style={{color: '#ffffff'}}>Bukti Nyata</b> = Jika kamu geser paku B atau C hingga nilai sudut keliling terbaca 45° di panel simulasi, maka sudut pusat otomatis mendeteksi angka 90° secara presisi.
                   </>
                 )
               }
@@ -572,49 +590,18 @@ export default function GeoCircleDashboard() {
                 </div>
                 <div style={{ height: expandedMateri[item.id] ? 'auto' : '0px', overflow: 'hidden', marginTop: expandedMateri[item.id] ? '20px' : '0px', transition: 'all 0.3s' }}>
                   <div style={{ fontSize: '9.5pt', color: '#94a3b8', lineHeight: '1.75', margin: 0, borderTop: '1px solid #111827', paddingTop: '15px', textAlign: 'justify' }}>
-                    
                     <p style={{ margin: '0 0 20px 0' }}>{item.detail}</p>
-                    
-                    {item.imageUrl && item.imageUrl !== '' && !item.imageUrl.startsWith('ISI_URL') && (
+                    {item.imageUrl && (
                       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' }}>
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.title} 
-                          onClick={(e) => e.stopPropagation()} 
-                          style={{ 
-                            maxWidth: '100%', 
-                            maxHeight: '280px', 
-                            borderRadius: '8px', 
-                            objectFit: 'contain', 
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            boxShadow: '0 15px 30px rgba(0,0,0,0.5)'
-                          }} 
-                        />
-                        {item.sumberUrl && (
-                          <span style={{ fontSize: '8pt', color: '#475569', marginTop: '8px', fontFamily: 'sans-serif' }}>
-                            Sumber: {' '}
-                            <a 
-                              href={item.sumberUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()} 
-                              style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500', borderBottom: '1px dashed rgba(6, 182, 212, 0.4)', paddingBottom: '1px' }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = '#a855f7'}
-                              onMouseLeave={(e) => e.currentTarget.style.color = '#06b6d4'}
-                            >
-                              {item.sumberNama || item.sumberUrl}
-                            </a>
-                          </span>
-                        )}
+                        <img src={item.imageUrl} alt={item.title} style={{ maxWidth: '100%', maxHeight: '280px', borderRadius: '8px', objectFit: 'contain', border: '1px solid rgba(255, 255, 255, 0.08)' }} />
+                        <span style={{ fontSize: '8pt', color: '#475569', marginTop: '8px' }}>Sumber: <a href={item.sumberUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#06b6d4', textDecoration: 'none' }}>{item.sumberNama}</a></span>
                       </div>
                     )}
-
                     {item.keterangan && (
-                      <div style={{ padding: '16px 20px', background: '#050811', borderRadius: '8px', border: '1px solid #111827', fontFamily: 'system-ui', fontSize: '8.5pt', color: '#64748b', lineHeight: '1.6' }}>
+                      <div style={{ padding: '16px 20px', background: '#050811', borderRadius: '8px', border: '1px solid #111827', fontSize: '8.5pt', color: '#64748b' }}>
                         {item.keterangan}
                       </div>
                     )}
-
                   </div>
                 </div>
               </div>
@@ -623,177 +610,65 @@ export default function GeoCircleDashboard() {
         </div>
       </section>
 
-      <footer style={{ backgroundColor: '#02040a', color: '#475569', padding: '35px 50px', textAlign: 'center', fontSize: '8.5pt', borderTop: '1px solid #090d16', letterSpacing: '0.5px', fontWeight: '500' }}>
+      <footer style={{ backgroundColor: '#02040a', color: '#475569', padding: '35px 50px', textAlign: 'center', fontSize: '8.5pt', borderTop: '1px solid #090d16' }}>
         &copy; {new Date().getFullYear()} GEO CIRCLE 3D. All rights reserved.
       </footer>
 
-      {/* ==========================================
-          MODAL SIMULATOR: TIMBUL & INTERAKTIF LUAR BIASA
-         ========================================== */}
+      {/* MODAL SIMULATOR */}
       {showSimulasi && (
-        <div className="simulator-container" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#050811', zIndex: 1000, overflow: 'auto', display: 'flex', flexDirection: 'row', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
+        <div className="sim-container-fix" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#050811', zIndex: 1000, overflowX: 'hidden', overflowY: 'hidden', display: 'flex', flexDirection: 'row', padding: '15px', boxSizing: 'border-box' }}>
           
           {/* PANEL KONTROL KIRI */}
-          <div className="simulator-panel" style={{ 
-            position: 'relative', 
-            margin: '15px 0 15px 15px', 
-            zIndex: 1010, 
-            backgroundColor: '#050915', 
-            padding: '20px', 
-            borderRadius: '12px', 
-            color: '#e2e8f0', 
-            width: '350px', 
-            minWidth: '350px', 
-            height: 'calc(100vh - 30px)', 
-            maxHeight: 'calc(100vh - 30px)', 
-            border: '1px solid #1e293b', 
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'flex-start', 
-            gap: '14px', 
-            boxSizing: 'border-box', 
-            overflowY: 'auto' 
-          }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '10px', flexShrink: 0 }}>
+          <div className="sim-panel-fix" style={{ position: 'relative', zIndex: 1010, backgroundColor: '#050915', padding: '20px', borderRadius: '12px', color: '#e2e8f0', width: '350px', minWidth: '350px', height: '100%', border: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '14px', boxSizing: 'border-box', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
               <div>
-                <div style={{ fontWeight: '900', fontSize: '10pt', color: '#ffffff', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                  GEO CIRCLE 3D
-                </div>
-                <div style={{ fontSize: '7pt', fontWeight: '700', color: '#06b6d4', letterSpacing: '1.2px', textTransform: 'uppercase', marginTop: '1px' }}>
-                  Alat Peraga Simulasi 3D
-                </div>
+                <div style={{ fontWeight: '900', fontSize: '10pt', color: '#ffffff', letterSpacing: '0.5px' }}>GEO CIRCLE 3D</div>
+                <div style={{ fontSize: '7pt', fontWeight: '700', color: '#06b6d4', letterSpacing: '1.2px', marginTop: '1px' }}>Alat Peraga Simulasi 3D</div>
               </div>
-              <button 
-                onClick={() => setShowSimulasi(false)} 
-                onMouseEnter={(e) => handleMouseEnter(e, 'rgba(239, 68, 68, 0.3)', '1.05')}
-                onMouseLeave={(e) => handleMouseLeave(e)}
-                onMouseDown={handleMouseDown}
-                style={{ 
-                  ...styleInteraktifButton,
-                  background: 'rgba(239, 68, 68, 0.08)', 
-                  color: '#ef4444', 
-                  border: '1px solid rgba(239, 68, 68, 0.25)', 
-                  padding: '6px 14px', 
-                  borderRadius: '6px', 
-                  fontSize: '7.5pt', 
-                  fontWeight: '700', 
-                  letterSpacing: '0.5px', 
-                  outline: 'none'
-                }}
-              >
-                KEMBALI
-              </button>
+              <button onClick={() => setShowSimulasi(false)} style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.25)', padding: '6px 14px', borderRadius: '6px', fontSize: '7.5pt', fontWeight: '700', cursor: 'pointer' }}>KEMBALI</button>
             </div>
 
-            <p style={{ fontSize: '8pt', color: '#94a3b8', lineHeight: '1.4', margin: 0, fontStyle: 'italic', flexShrink: 0 }}>
-              Klik lingkaran 3D atau ketik derajat pada input di bawah.
-            </p>
+            <p style={{ fontSize: '8pt', color: '#94a3b8', margin: 0, fontStyle: 'italic' }}>Klik lingkaran 3D atau ketik derajat pada input di bawah.</p>
             
-            <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-              <button 
-                onClick={() => setTargetSumbu('B')} 
-                onMouseEnter={(e) => handleMouseEnter(e, targetSumbu === 'B' ? 'rgba(249, 115, 22, 0.4)' : 'rgba(249, 115, 22, 0.15)', '1.03')}
-                onMouseLeave={(e) => handleMouseLeave(e)}
-                onMouseDown={handleMouseDown}
-                style={{ 
-                  ...styleInteraktifButton,
-                  background: targetSumbu === 'B' ? '#f97316' : '#0f172a', 
-                  color: targetSumbu === 'B' ? 'white' : '#f97316', 
-                  border: targetSumbu === 'B' ? '1px solid #f97316' : '1px solid rgba(249, 115, 22, 0.3)', 
-                  padding: '10px 0', 
-                  borderRadius: '8px', 
-                  fontWeight: '800', 
-                  fontSize: '7.5pt', 
-                  flex: 1,
-                  outline: 'none',
-                  boxShadow: targetSumbu === 'B' ? '0 4px 12px rgba(249, 115, 22, 0.2)' : 'none'
-                }}
-              >
-                SET PAKU ORANYE
-              </button>
-              <button 
-                onClick={() => setTargetSumbu('C')} 
-                onMouseEnter={(e) => handleMouseEnter(e, targetSumbu === 'C' ? 'rgba(217, 70, 239, 0.4)' : 'rgba(217, 70, 239, 0.15)', '1.03')}
-                onMouseLeave={(e) => handleMouseLeave(e)}
-                onMouseDown={handleMouseDown}
-                style={{ 
-                  ...styleInteraktifButton,
-                  background: targetSumbu === 'C' ? '#d946ef' : '#0f172a', 
-                  color: targetSumbu === 'C' ? 'white' : '#d946ef', 
-                  border: targetSumbu === 'C' ? '1px solid #d946ef' : '1px solid rgba(217, 70, 239, 0.3)', 
-                  padding: '10px 0', 
-                  borderRadius: '8px', 
-                  fontWeight: '800', 
-                  fontSize: '7.5pt', 
-                  flex: 1,
-                  outline: 'none',
-                  boxShadow: targetSumbu === 'C' ? '0 4px 12px rgba(217, 70, 239, 0.2)' : 'none'
-                }}
-              >
-                SET PAKU UNGU
-              </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setTargetSumbu('B')} style={{ background: targetSumbu === 'B' ? '#f97316' : '#0f172a', color: targetSumbu === 'B' ? 'white' : '#f97316', border: '1px solid rgba(249, 115, 22, 0.3)', padding: '10px 0', borderRadius: '8px', fontWeight: '800', fontSize: '7.5pt', flex: 1, cursor: 'pointer' }}>SET PAKU ORANYE</button>
+              <button onClick={() => setTargetSumbu('C')} style={{ background: targetSumbu === 'C' ? '#d946ef' : '#0f172a', color: targetSumbu === 'C' ? 'white' : '#d946ef', border: '1px solid rgba(217, 70, 239, 0.3)', padding: '10px 0', borderRadius: '8px', fontWeight: '800', fontSize: '7.5pt', flex: 1, cursor: 'pointer' }}>SET PAKU UNGU</button>
             </div>
 
-            <div style={{ background: 'rgba(6, 182, 212, 0.04)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(6, 182, 212, 0.12)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
-                <span style={{ fontSize: '7pt', color: '#06b6d4', fontWeight: '800' }}>PAKU A - TERKUNCI OTOMATIS</span>
-              </div>
+            <div style={{ background: 'rgba(6, 182, 212, 0.04)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(6, 182, 212, 0.12)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} /><span style={{ fontSize: '7pt', color: '#06b6d4', fontWeight: '800' }}>PAKU A - TERKUNCI OTOMATIS</span></div>
               <p style={{ fontSize: '8pt', color: '#94a3b8', margin: 0, paddingLeft: '10px', marginTop: '2px' }}>Posisi seimbang di seberang busur: <b style={{ color: '#06b6d4', fontFamily: 'monospace' }}>{sudutA}°</b></p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ background: '#090f20', border: '1px solid #1e293b', padding: '12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>SUDUT PUSAT (∠BOC)</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#d946ef' }} />
-                  <span style={{ color: '#ffffff', fontSize: '20pt', fontWeight: '900', fontFamily: 'monospace' }}>{sudutPusat}°</span>
-                </div>
+                <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700' }}>SUDUT PUSAT (∠BOC)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#d946ef' }} /><span style={{ color: '#ffffff', fontSize: '20pt', fontWeight: '900', fontFamily: 'monospace' }}>{sudutPusat}°</span></div>
               </div>
-
               <div style={{ background: '#090f20', border: '1px solid #1e293b', padding: '12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>SUDUT KELILING (∠BAC)</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
-                  <span style={{ color: '#ffffff', fontSize: '20pt', fontWeight: '900', fontFamily: 'monospace' }}>{sudutKeliling}°</span>
-                </div>
+                <span style={{ fontSize: '7pt', color: '#94a3b8', fontWeight: '700' }}>SUDUT KELILING (∠BAC)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#06b6d4' }} /><span style={{ color: '#ffffff', fontSize: '20pt', fontWeight: '900', fontFamily: 'monospace' }}>{sudutKeliling}°</span></div>
               </div>
             </div>
 
-            <div style={{ background: 'rgba(168, 85, 247, 0.04)', padding: '12px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(168, 85, 247, 0.15)', fontSize: '9.5pt', fontWeight: '700', color: '#c084fc', fontFamily: 'monospace', flexShrink: 0 }}>
+            <div style={{ background: 'rgba(168, 85, 247, 0.04)', padding: '12px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(168, 85, 247, 0.15)', fontSize: '9.5pt', fontWeight: '700', color: '#c084fc', fontFamily: 'monospace' }}>
               {sudutPusat}° = 2 × {sudutKeliling}° <span style={{ color: '#34d399', marginLeft: '3px' }}>✓</span>
             </div>
 
-            <div style={{ flexShrink: 0, display: 'flex', gap: '10px', borderTop: '1px solid #1e293b', paddingTop: '12px', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid #1e293b', paddingTop: '12px', marginTop: 'auto' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                 <span style={{ fontSize: '7pt', color: '#f97316', fontWeight: '800' }}>PAKU ORANYE (°)</span>
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  value={textInputB} 
-                  onChange={(e) => handleCustomInputChange('B', e.target.value)}
-                  onBlur={() => handleInputBlur('B', sudutB)}
-                  style={{ background: '#090f20', border: '1px solid rgba(249, 115, 22, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s' }}
-                />
+                <input type="text" inputMode="numeric" value={textInputB} onChange={(e) => handleCustomInputChange('B', e.target.value)} onBlur={() => handleInputBlur('B', sudutB)} style={{ background: '#090f20', border: '1px solid rgba(249, 115, 22, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                 <span style={{ fontSize: '7pt', color: '#d946ef', fontWeight: '800' }}>PAKU UNGU (°)</span>
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  value={textInputC} 
-                  onChange={(e) => handleCustomInputChange('C', e.target.value)}
-                  onBlur={() => handleInputBlur('C', sudutC)}
-                  style={{ background: '#090f20', border: '1px solid rgba(217, 70, 239, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace', transition: 'border-color 0.2s' }}
-                />
+                <input type="text" inputMode="numeric" value={textInputC} onChange={(e) => handleCustomInputChange('C', e.target.value)} onBlur={() => handleInputBlur('C', sudutC)} style={{ background: '#090f20', border: '1px solid rgba(217, 70, 239, 0.25)', borderRadius: '6px', color: '#ffffff', fontSize: '9pt', padding: '8px', width: '100%', boxSizing: 'border-box', fontWeight: '700', textAlign: 'center', outline: 'none', fontFamily: 'monospace' }} />
               </div>
             </div>
           </div>
 
-          {/* AREA RENDERING CANVAS 3D SIMULATOR */}
-          <div style={{ flex: 1, minHeight: '450px', position: 'relative', overflow: 'hidden' }}>
+          {/* AREA CANVAS 3D SIMULATOR */}
+          <div className="sim-canvas-fix" style={{ flex: 1, height: '100%', position: 'relative' }}>
             <Canvas camera={{ position: [0, 0, 5.5], fov: 46 }} style={{ display: 'block', width: '100%', height: '100%' }}>
               <color attach="background" args={['#050811']} />
               <ambientLight intensity={0.6} />
@@ -801,25 +676,12 @@ export default function GeoCircleDashboard() {
               <pointLight position={[-5, -5, 3]} intensity={0.6} color="#a855f7" />
               
               <Center>
-                <JajaranPaku 
-                  radius={radius} 
-                  onSelectPaku={handlePakuClick} 
-                  aktifB={sudutB} 
-                  aktifC={sudutC} 
-                  aktifA={sudutA} 
-                  targetSumbu={targetSumbu}
-                />
-
-                <mesh position={[0, 0, 0.05]}>
-                  <sphereGeometry args={[0.06, 16, 16]} />
-                  <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8} />
-                </mesh>
-
+                <JajaranPaku radius={radius} onSelectPaku={handlePakuClick} aktifB={sudutB} aktifC={sudutC} aktifA={sudutA} targetSumbu={targetSumbu} />
+                <mesh position={[0, 0, 0.05]}><sphereGeometry args={[0.06, 16, 16]} /><meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8} /></mesh>
                 <Line points={[posO, posB]} color="#f97316" lineWidth={4.5} /> 
                 <Line points={[posO, posC]} color="#d946ef" lineWidth={4.5} /> 
                 <Line points={[posB, posA, posC]} color="#06b6d4" lineWidth={4.5} /> 
               </Center>
-
               <OrbitControls enablePan={false} enableZoom={true} minDistance={4} maxDistance={10} makeDefault />
             </Canvas>
           </div>
